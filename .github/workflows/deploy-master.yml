@@ -11,7 +11,7 @@ jobs:
     - uses: goodsmileduck/yandex-serverless-action@v1
       with:
         token: ${{ secrets.YAAUTH }}
-        function_id: ${{ secrets.DAIRY_ID }}
+        function_id: ${{ secrets.FUNCTION_ID }}
         runtime: 'python37-preview'
         memory: '128'
         environment: DEBUG=False
