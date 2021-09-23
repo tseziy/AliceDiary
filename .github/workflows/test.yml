@@ -1,22 +1,13 @@
-name: Test Alice skill
+name: Tests Alice skill
 
 on:
   push:
     branches-ignore: [ main ]
   pull_request:
     branches: [ main ]
-    types:
-      - labeled
-      - unlabeled
-      - synchronize
-      - opened
-      - edited
-      - ready_for_review
-      - reopened
-      - unlocked
 
 jobs:
-  build:
+  test:
 
     runs-on: ubuntu-latest
 
