@@ -1,7 +1,9 @@
 name: Deploy Alice skill
 
 on:
-  push
+  push:
+    paths-ignore:
+      - '**.md'
 
 jobs:
   Deploy:
