@@ -3,7 +3,7 @@ import pymorphy2
 
 morph = pymorphy2.MorphAnalyzer()
 
-
+# test
 def __inflect(word, case):
     return " ".join([morph.parse(x)[-1].inflect(case).word for x in word.split(" ")])
 
