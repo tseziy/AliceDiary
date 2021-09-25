@@ -6,9 +6,9 @@ from typing import Optional
 from skill.alice import Request
 from skill.state import (
     PERMANENT_VALUES,
+    PREVIOUS_MOVES,
     STATE_RESPONSE_KEY,
     USERSTATE_RESPONSE_KEY,
-    PREVIOUS_MOVES,
 )
 
 

@@ -1,4 +1,3 @@
-import random
 import pymorphy2
 
 morph = pymorphy2.MorphAnalyzer()
@@ -31,10 +30,7 @@ def mistake():
 
 
 def goodbye():
-    text = (
-        "Возвращайтесь в любое время."
-        "До свидания!"
-    )
+    text = "Возвращайтесь в любое время." "До свидания!"
     tts = "<speaker audio='alice-sounds-game-loss-3.opus'>" + text
     return text, tts
 
@@ -47,7 +43,7 @@ def help_menu():
 
 
 def help_menu_fallback():
-    text = f"""Извините, я вас не понял. Пожалуйста, повторите что Вы сказали.
+    text = """Извините, я вас не понял. Пожалуйста, повторите что Вы сказали.
                 Скажите "Помощь", чтобы снова получить подсказки."""
 
     return text, text

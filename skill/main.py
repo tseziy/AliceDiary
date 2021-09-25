@@ -26,7 +26,10 @@ def handler(event, context):
             level=logging.INFO, event_level=logging.ERROR
         )
         sentry_sdk.init(
-            dsn="https://9e08c21c38da43de9c475699b61ab6d4@o241410.ingest.sentry.io/5974885",
+            dsn=(
+                "https://9e08c21c38da43de9c475699b61ab6d4@o241410"
+                ".ingest.sentry.io/5974885"
+            ),
             integrations=[sentry_logging],
             environment="development"
             if os.environ["DEBUG"] == "True"

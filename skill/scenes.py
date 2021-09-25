@@ -1,17 +1,9 @@
 import inspect
-import logging
 import sys
 
 import skill.texts as texts
 from skill import intents, state
-from skill.alice import (
-    Request,
-    big_image,
-    button,
-    image_button,
-    image_gallery,
-    image_list,
-)
+from skill.alice import Request, button
 from skill.scenes_util import Scene
 
 # region Базовые классы

@@ -1,6 +1,7 @@
-import skill.main as main
 import json
 import os
+
+import skill.main as main
 
 true = True
 false = False

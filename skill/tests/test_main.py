@@ -20,10 +20,14 @@ def session(new=False):
         "session_id": "d825cbef-e7d6-4af9-9810-3ff3f358ac16",
         "skill_id": "3308dc06-b901-4f7e-8882-beb1b84c0753",
         "user": {
-            "user_id": "2D3566FF6B2A05868FE43CDCE5D5E167F13EEDCA13DD4B5BD0F656065D0350E9"
+            "user_id": (
+                "2D3566FF6B2A05868FE43CDCE5D5E167F13EEDCA13DD4B5BD0F656065D0350E9"
+            )
         },
         "application": {
-            "application_id": "EFFF6BDD6A2D661526BB262D095D4789DE7F86EC6AA1C1A7480FB94CD9FB6544"
+            "application_id": (
+                "EFFF6BDD6A2D661526BB262D095D4789DE7F86EC6AA1C1A7480FB94CD9FB6544"
+            )
         },
         "user_id": "EFFF6BDD6A2D661526BB262D095D4789DE7F86EC6AA1C1A7480FB94CD9FB6544",
         "new": new,

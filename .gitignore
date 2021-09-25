@@ -130,3 +130,11 @@ dmypy.json
 
 # IDE
 /.idea
+.vscode/*
+!.vscode/settings-example.json
+!.vscode/launch-example.json
+
+*.code-workspace
+
+# Local History for Visual Studio Code
+.history/
