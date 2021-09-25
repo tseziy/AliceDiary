@@ -20,8 +20,8 @@ jobs:
           runtime: 'python37-preview'
           memory: '128'
           environment: DEBUG=True
-          entrypoint: 'main.handler'
-          source: './skill'
+          entrypoint: 'skill.main.handler'
+          source: './'
           exclude: './skill/tests'
       - name: Deploy production
         if: github.ref == 'refs/heads/main'
@@ -32,6 +32,6 @@ jobs:
           runtime: 'python37-preview'
           memory: '128'
           environment: DEBUG=False
-          entrypoint: 'main.handler'
-          source: './skill'
+          entrypoint: 'skill.main.handler'
+          source: './'
           exclude: './skill/tests'
