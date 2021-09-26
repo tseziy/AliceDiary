@@ -19,8 +19,8 @@ class Homework:
     assignment_text: str
 
 
-def get_school_id_by_name(name: str) -> str:
-    if name == "Лицей 49":
+def get_school_id_by_name(number: int) -> str:
+    if number == 49:
         return "some-school-id"
     raise NotFoundError("school not found")
 
@@ -42,5 +42,5 @@ def get_schedule(school_id: str, class_id: str, day: date) -> List[PlannedLesson
 
 def get_homework(school_id: str, class_id: str, day: date) -> List[Homework]:
     if school_id == "some-school-id" and class_id == "some-class-id":
-        return [Homework("Алгебар", "Примеры №42, №43")]
+        return [Homework("Алгебра", "Примеры №42, №43")]
     raise NotFoundError("homework not found")
