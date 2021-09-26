@@ -1,0 +1,95 @@
+entity SchoolSubject:
+    lemma: true
+    values:
+        maths:
+            математика
+            алгебра
+        geometry:
+            геометрия
+        calligraphy:
+            чистописание
+        reading:
+            чтение
+        work:
+            труд
+        natural:
+            природовение
+        music:
+            музыка
+            пение
+        art:
+            изобразительное искусство
+            изо
+            рисование
+        russianLanguage:
+            русский язык
+            русский
+            русскому
+        physicalEducation:
+            физкультура
+            физическая культура
+            физра
+            фезра
+        nativeLanguage:
+            родной язык
+        foundationsOfReligiousCulturesAndSecularEthics:
+            основы религиозных культур и светской этики
+            основы религиозных культур
+            основы светской этики
+        foreignLanguage:
+            иностранный язык
+            иностранный
+            ин яз
+            иняз
+            английский
+        civics:
+            граждановедение
+        localHistory:
+            краеведение
+        history:
+            история
+        literature:
+            литература
+            литра
+        bls:
+            обж
+            основы безопасности жизнедеятельности
+        technology:
+            технология
+        geography:
+            география
+        biology:
+            биология
+        computerScience:
+            информатика
+        socialStudies:
+            обществознание
+        drawing:
+            черчение
+        physics:
+            физика
+        chemistry:
+            химия
+        naturalScience:
+            естествознание
+        fundamentalsOfEconomics:
+            основы экономики
+        jurisprudence:
+            правоведение
+        philosophy:
+            философия
+        ecology:
+            экология
+        astronomy:
+            астраномия
+        basicMilitaryTraining:
+            нвп
+            начальная военная подготовка
+        worldArt:
+            мировая художественная культура
+            МХК
+            Мировая культура
+        rhetoric:
+            риторика
+        
+                
