@@ -1,0 +1,6 @@
+root:
+    .* $schedule .*
+
+$schedule:
+    %lemma
+    расписание

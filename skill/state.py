@@ -5,6 +5,7 @@ PREVIOUS_MOVES = "prev_moves"
 
 # region State of dialog
 
+STUDENTS = "students"
 
 # endregion
 

@@ -1,10 +1,13 @@
 import inspect
 import sys
+from dataclasses import asdict
+from datetime import date, timedelta
 
 import skill.texts as texts
-from skill import intents, state
+from skill import diary_api, intents, state
 from skill.alice import Request, button
 from skill.scenes_util import Scene
+from skill.schemas import Student
 
 # region Базовые классы
 
@@ -53,6 +56,8 @@ class Welcome(GlobalScene):
     def handle_local_intents(self, request: Request):
         if intents.HELP in request.intents:
             return HelpMenu()
+        if intents.CONFIRM in request.intents:
+            return SetupScene()
 
 
 class HaveMistake(GlobalScene):
@@ -75,6 +80,83 @@ class HelpMenu(GlobalScene):
             buttons=[],
             state={},
         )
+
+
+# endregion
+
+# region Setup
+
+
+class SetupScene(GlobalScene):
+    # TODO полноценная логика с указанием:
+    # - количества учеников
+    # - заполнением их school_id, class_id, name по ответам пользователя
+
+    def reply(self, request: Request):
+        text, tts = texts.setup()
+        return self.make_response(
+            request,
+            text,
+            tts,
+            # Пока просто замокал сценарий
+            user_state={
+                state.STUDENTS: [
+                    asdict(
+                        Student(
+                            "Кузьма",
+                            "some-school-id",
+                            "some-class-id",
+                        )
+                    )
+                ]
+            },
+        )
+
+    def handle_local_intents(self, request: Request):
+        return ChooseScenario()
+
+
+# endregion
+
+# region base scenario
+
+
+class ChooseScenario(GlobalScene):
+    def reply(self, request: Request):
+        text, tts = texts.choose_scenario()
+        return self.make_response(request, text, tts)
+
+    def handle_local_intents(self, request: Request):
+        if intents.GET_SCHEDULE in request.intents:
+            return GetSchedule()
+        elif intents.GET_HOMEWORK in request.intents:
+            return GetHomework()
+
+
+class GetSchedule(GlobalScene):
+    # TODO
+    # - обработка ошибок при получении студента
+    # - выбор дня (не только завтра)
+    def reply(self, request: Request):
+        saved_list = request.user.get(state.STUDENTS, [])
+        students = [Student(**s) for s in saved_list]
+        if students:
+            current_student: Student = students[0]
+        lesson_list = diary_api.get_schedule(
+            current_student.school_id,
+            current_student.class_id,
+            date.today() + timedelta(days=1),
+        )
+        text, tts = texts.get_schedule(lesson_list)
+        return self.make_response(request, text, tts)
+
+    def handle_local_intents(self, request: Request):
+        return ChooseScenario()
+
+
+class GetHomework(GlobalScene):
+    ...
+    # TODO
 
 
 # endregion

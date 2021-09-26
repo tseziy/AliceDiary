@@ -7,3 +7,6 @@ WHAT_CAN_YOU_DO = "YANDEX.WHAT_CAN_YOU_DO"
 REPEAT = "YANDEX.REPEAT"
 
 # endregion
+
+GET_SCHEDULE = "get_schedule"
+GET_HOMEWORK = "get_homework"

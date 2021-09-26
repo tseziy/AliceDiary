@@ -1,4 +1,8 @@
+from typing import List
+
 import pymorphy2
+
+from skill.schemas import PlannedLesson
 
 morph = pymorphy2.MorphAnalyzer()
 
@@ -47,3 +51,26 @@ def help_menu_fallback():
                 Скажите "Помощь", чтобы снова получить подсказки."""
 
     return text, text
+
+
+def setup():
+    #  TODO полноценный сценарий настройки
+    text = "Укажите данные учеников"
+    tts = text
+
+    return text, tts
+
+
+def choose_scenario():
+    text = "Рассказать что задали сегодня или рассписание на завтра?"
+    tts = text
+
+    return text, tts
+
+
+def get_schedule(lessons: List[PlannedLesson]):
+    text = "Список уроков:\n"
+    text += "\n".join(str(lesson) for lesson in lessons)
+    tts = text
+
+    return text, tts

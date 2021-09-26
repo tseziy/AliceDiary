@@ -1,22 +1,11 @@
-from dataclasses import dataclass
 from datetime import date, time
 from typing import List
+
+from skill.schemas import Homework, PlannedLesson
 
 
 class NotFoundError(Exception):
     pass
-
-
-@dataclass
-class PlannedLesson:
-    name: str
-    time: time
-
-
-@dataclass
-class Homework:
-    lesson_name: str
-    assignment_text: str
 
 
 def get_school_id_by_name(number: int) -> str:
