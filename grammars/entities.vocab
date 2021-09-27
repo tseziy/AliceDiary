@@ -24,7 +24,6 @@ entity SchoolSubject:
         russianLanguage:
             русский язык
             русский
-            русскому
         physicalEducation:
             физкультура
             физическая культура
@@ -88,7 +87,7 @@ entity SchoolSubject:
         worldArt:
             мировая художественная культура
             МХК
-            Мировая культура
+            мировая культура
         rhetoric:
             риторика
         
