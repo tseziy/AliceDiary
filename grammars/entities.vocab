@@ -4,6 +4,7 @@ entity SchoolSubject:
         maths:
             математика
             алгебра
+            матеша
         geometry:
             геометрия
         calligraphy:
@@ -14,6 +15,7 @@ entity SchoolSubject:
             труд
         natural:
             природовение
+            природа
         music:
             музыка
             пение
@@ -24,6 +26,7 @@ entity SchoolSubject:
         russianLanguage:
             русский язык
             русский
+            русич
         physicalEducation:
             физкультура
             физическая культура
@@ -63,6 +66,7 @@ entity SchoolSubject:
             информатика
         socialStudies:
             обществознание
+            общество
         drawing:
             черчение
         physics:
@@ -75,6 +79,7 @@ entity SchoolSubject:
             основы экономики
         jurisprudence:
             правоведение
+            право
         philosophy:
             философия
         ecology:
