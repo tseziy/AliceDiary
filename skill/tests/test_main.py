@@ -34,20 +34,24 @@ def session(new=False):
     }
 
 
-def prepare_request(new=False, intents=None, state_session=None, state_user=None):
+def prepare_request(
+    new=False, intents=None, entities=None, state_session=None, state_user=None
+):
     if intents is None:
         intents = {}
     if state_session is None:
         state_session = {}
     if state_user is None:
         state_user = {}
+    if entities is None:
+        entities = []
     req = {
         "meta": meta(),
         "session": session(new),
         "request": {
             "command": "",
             "original_utterance": "",
-            "nlu": {"tokens": [], "entities": [], "intents": intents},
+            "nlu": {"tokens": [], "entities": entities, "intents": intents},
             "markup": {"dangerous_context": False},
             "type": "SimpleUtterance",
         },
@@ -58,10 +62,14 @@ def prepare_request(new=False, intents=None, state_session=None, state_user=None
     return req
 
 
-def intent(name, slots=None):
+def intent(name: str, slots=None):
     if slots is None:
         slots = []
     return {name: {"slots": slots}}
+
+
+def entity(type: str, value):
+    return {"type": type, "value": value}
 
 
 def get_next_scene(answer):
@@ -107,6 +115,29 @@ def schedule():
     )
 
 
+@pytest.fixture()
+def start_menu():
+    return prepare_request(
+        intents=intent(intents.CONFIRM), state_session={"scene": "Welcome"}
+    )
+
+
+@pytest.fixture()
+def say_name():
+    return prepare_request(
+        entities=[entity(intents.FIO, {"first_name": "Добрыня"})],
+        state_session={"scene": "FirstSettingsScene"},
+    )
+
+
+@pytest.fixture()
+def say_num():
+    return prepare_request(
+        entities=[entity(intents.NUMBER, 666)],
+        state_session={"scene": "Settings_GetSchool"},
+    )
+
+
 # endregion
 
 # region start
@@ -128,6 +159,7 @@ def test_help(help_session):
 
 
 # endregion
+
 
 # region Меню помощью
 

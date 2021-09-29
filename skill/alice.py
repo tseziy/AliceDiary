@@ -17,8 +17,21 @@ class Request:
         return self.request_body["request"].get("original_utterance", "")
 
     @property
+    def tokens(self):
+        return self.request_body["request"].get("nlu", {}).get("tokens", [])
+
+    @property
     def intents(self):
         return self.request_body["request"].get("nlu", {}).get("intents", {})
+
+    @property
+    def entities_list(self):
+        return [
+            entity["type"]
+            for entity in self.request_body["request"]
+            .get("nlu", {})
+            .get("entities", [])
+        ]
 
     @property
     def type(self):
@@ -55,6 +68,15 @@ class Request:
             .get(slot, {})
             .get("value", None)
         )
+
+    def entity(self, type: str):
+        return [
+            entity["value"]
+            for entity in self.request_body["request"]
+            .get("nlu", {})
+            .get("entities", [])
+            if entity["type"] == type
+        ]
 
 
 def big_image(image_id: list, title=None, description=None):

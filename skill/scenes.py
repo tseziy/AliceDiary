@@ -49,6 +49,7 @@ class Welcome(GlobalScene):
             text,
             tts,
             buttons=[
+                button("Да"),
                 button("Помощь"),
             ],
         )
@@ -57,7 +58,7 @@ class Welcome(GlobalScene):
         if intents.HELP in request.intents:
             return HelpMenu()
         if intents.CONFIRM in request.intents:
-            return SetupScene()
+            return FirstSettingsScene()
 
 
 class HaveMistake(GlobalScene):
@@ -114,6 +115,156 @@ class SetupScene(GlobalScene):
 
     def handle_local_intents(self, request: Request):
         return ChooseScenario()
+
+
+# endregion
+
+# region settings
+
+
+class FirstSettingsScene(GlobalScene):
+    def reply(self, request: Request):
+        text, tts = texts.start_setting()
+        return self.make_response(request, text, tts, buttons=[button("Помощь")])
+
+    def handle_local_intents(self, request: Request):
+        if intents.FIO in request.entities_list:
+            return Settings_GetSchool()
+
+
+class Settings_GetSchool(GlobalScene):
+    def reply(self, request: Request):
+        name = request.entity(intents.FIO)[0]["first_name"].capitalize()
+
+        text, tts = texts.what_school(name)
+        return self.make_response(
+            request,
+            text,
+            tts,
+            buttons=[button("Помощь")],
+            state={state.TEMP_NAME: name},
+        )
+
+    def handle_local_intents(self, request: Request):
+        if intents.NUMBER in request.entities_list:
+            return Settings_GetClassNumber()
+
+
+class Settings_GetClassNumber(GlobalScene):
+    def reply(self, request: Request):
+        school_num = request.entity(intents.NUMBER)[0]
+        text, tts = texts.what_classnumber()
+        return self.make_response(
+            request,
+            text,
+            tts,
+            buttons=[button("Помощь")],
+            state={state.TEMP_SCHOOL: school_num},
+        )
+
+    def handle_local_intents(self, request: Request):
+        if intents.NUMBER in request.entities_list:
+            class_num = request.entity(intents.NUMBER)[0]
+            if 1 <= class_num <= 11:
+                class_letter = request.tokens[-1]
+                if "А" <= class_letter.upper() <= "Я":
+                    return Settings_Confirm()
+                else:
+                    return Settings_GetClassLetter()
+
+
+class Settings_GetClassLetter(GlobalScene):
+    def reply(self, request: Request):
+        class_num = request.entity(intents.NUMBER)[0]
+        text, tts = texts.what_classletter()
+        return self.make_response(
+            request,
+            text,
+            tts,
+            buttons=[
+                button("А"),
+                button("Б"),
+                button("В"),
+                button("Г"),
+                button("Д"),
+                button("Помощь"),
+            ],
+            state={state.TEMP_CLASS_ID: str(class_num)},
+        )
+
+    def handle_local_intents(self, request: Request):
+        class_letter = request.tokens[-1]
+        if "А" <= class_letter.capitalize() <= "Я":
+            return Settings_Confirm()
+
+
+class Settings_Confirm(GlobalScene):
+    def reply(self, request: Request):
+        prev_session = request.session.get("scene")
+        if prev_session == "Settings_GetClassNumber":  # назвали класс полностью
+            class_num = request.entity(intents.NUMBER)[0]
+            class_letter = request.tokens[-1]
+        else:
+            class_num = request.session.get(state.TEMP_CLASS_ID)
+            class_letter = request.tokens[-1]
+        class_id = str(class_num) + class_letter.upper()
+
+        text, tts = texts.confirm_settings(
+            request.session.get(state.TEMP_NAME),
+            request.session.get(state.TEMP_SCHOOL),
+            class_id,
+        )
+
+        return self.make_response(
+            request,
+            text,
+            tts,
+            buttons=[button("Да"), button("Нет")],
+            state={state.TEMP_CLASS_ID: class_id},
+        )
+
+    def handle_local_intents(self, request: Request):
+        if intents.CONFIRM in request.intents:
+            return Settings_OneMore()
+        elif intents.REJECT in request.intents:
+            return Settings_Correct()
+
+
+class Settings_OneMore(GlobalScene):
+    def reply(self, request: Request):
+        text, tts = texts.one_more_student()
+
+        name = request.session.get(state.TEMP_NAME)
+        school = request.session.get(state.TEMP_SCHOOL)
+        class_id = request.session.get(state.TEMP_CLASS_ID)
+
+        return self.make_response(
+            request,
+            text,
+            tts,
+            user_state={
+                state.STUDENTS: [
+                    asdict(
+                        Student(
+                            name,
+                            school,
+                            class_id,
+                        )
+                    )
+                ]
+            },
+        )
+
+    def handle_local_intents(self, request: Request):
+        if intents.CONFIRM in request.intents:
+            return FirstSettingsScene()
+        else:  # TODO Переход на другую основную сцену
+            return Welcome()
+
+
+class Settings_Correct(GlobalScene):
+    # TODO: реализовать корректировку настроек. Точнее заново запросить
+    pass
 
 
 # endregion

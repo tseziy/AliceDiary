@@ -1,6 +1,16 @@
 name: Grammar check
 
-on: [push, pull_request]
+on:
+  push:
+    paths-ignore:
+      - '**.md'
+      - '**.grammar'
+      - '**.txt'
+  pull_request:
+    paths-ignore:
+      - '**.md'
+      - '**.grammar'
+      - '**.txt'
 
 jobs:
   build:
