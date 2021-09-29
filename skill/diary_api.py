@@ -1,35 +1,60 @@
-from datetime import date, time
+import os
+from datetime import date
 from typing import List
 
+import pandas as pd
+
 from skill.schemas import Homework, PlannedLesson
+
+df = pd.read_csv(
+    os.path.abspath("skill/database.csv"),
+    sep=";",
+    encoding="utf-8",
+    dtype="str",
+)
+df.fillna("", inplace=True)
 
 
 class NotFoundError(Exception):
     pass
 
 
-def get_school_id_by_name(number: int) -> str:
-    if number == 49:
-        return "some-school-id"
-    raise NotFoundError("school not found")
+def get_schedule(
+    school_id: str, class_id: str, day=None, lessons=[]
+) -> List[PlannedLesson]:
+
+    temp = df.loc[(df["school_id"] == school_id) & (df["class_id"] == class_id)]
+    if day is None:
+        day = date.today().strftime("%d.%m.%Y")
+
+    temp = temp.loc[df["date"] == day]
+
+    if lessons:
+        temp = temp.loc[df["lesson"].isin(lessons)]
+    result = []
+    for index, row in temp.iterrows():
+        result.append(PlannedLesson(row["lesson"], row["time_start"]))
+
+    return result
 
 
-def get_class_id_by_name(name: str) -> str:
-    if name == "7Б":
-        return "some-class-id"
-    raise NotFoundError("class not found")
+def get_homework(school_id: str, class_id: str, day=None, lessons=[]) -> List[Homework]:
 
+    temp = df.loc[
+        (df["school_id"] == school_id)
+        & (df["class_id"] == class_id)
+        & (df["homework"] != "")
+    ]
 
-def get_schedule(school_id: str, class_id: str, day: date) -> List[PlannedLesson]:
-    if school_id == "some-school-id" and class_id == "some-class-id":
-        return [
-            PlannedLesson("Алгебра", time(9, 0)),
-            PlannedLesson("Русский язык", time(9, 45)),
-        ]
-    raise NotFoundError("Schedule not found")
+    if day is None:
+        day = date.today().strftime("%d.%m.%Y")
 
+    temp = temp.loc[df["date"] == day]
 
-def get_homework(school_id: str, class_id: str, day: date) -> List[Homework]:
-    if school_id == "some-school-id" and class_id == "some-class-id":
-        return [Homework("Алгебра", "Примеры №42, №43")]
-    raise NotFoundError("homework not found")
+    if lessons:
+        temp = temp.loc[df["lesson"].isin(lessons)]
+    result = []
+    for index, row in temp.iterrows():
+        result.append(Homework(row["lesson"], row["homework"]))
+
+    return result
