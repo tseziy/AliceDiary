@@ -1,3 +1,102 @@
+entity SchoolSubject:
+    lemma: true
+    values:
+        maths:
+            математика
+            алгебра
+            матеша
+        geometry:
+            геометрия
+        calligraphy:
+            чистописание
+        reading:
+            чтение
+        work:
+            труд
+        natural:
+            природовение
+            природа
+        music:
+            музыка
+            пение
+        art:
+            изобразительное искусство
+            изо
+            рисование
+        russianLanguage:
+            русский язык
+            русский
+            русич
+        physicalEducation:
+            физкультура
+            физическая культура
+            физра
+            фезра
+        nativeLanguage:
+            родной язык
+        foundationsOfReligiousCulturesAndSecularEthics:
+            основы религиозных культур и светской этики
+            основы религиозных культур
+            основы светской этики
+        foreignLanguage:
+            иностранный язык
+            иностранный
+            ин яз
+            иняз
+            английский
+        civics:
+            граждановедение
+        localHistory:
+            краеведение
+        history:
+            история
+        literature:
+            литература
+            литра
+        bls:
+            обж
+            основы безопасности жизнедеятельности
+        technology:
+            технология
+        geography:
+            география
+        biology:
+            биология
+        computerScience:
+            информатика
+        socialStudies:
+            обществознание
+            общество
+        drawing:
+            черчение
+        physics:
+            физика
+        chemistry:
+            химия
+        naturalScience:
+            естествознание
+        fundamentalsOfEconomics:
+            основы экономики
+        jurisprudence:
+            правоведение
+            право
+        philosophy:
+            философия
+        ecology:
+            экология
+        astronomy:
+            астраномия
+        basicMilitaryTraining:
+            нвп
+            начальная военная подготовка
+        worldArt:
+            мировая художественная культура
+            МХК
+            мировая культура
+        rhetoric:
+            риторика
+        
+                
 entity Count:
     lemma: true
     values:
@@ -37,4 +136,5 @@ entity Count:
             девять
         ten:
             вдесятером
+            десять
             десять
