@@ -1,14 +1,15 @@
 import inspect
 import sys
 from dataclasses import asdict
-from datetime import date, timedelta
 
 import skill.texts as texts
 from skill import diary_api, intents, state
 from skill.alice import Request, button
+from skill.dates_transformations import (
+    transform_yandex_datetime_value_to_datetime as ya_date_transform,
+)
 from skill.scenes_util import Scene
 from skill.schemas import Student
-from skill.dates_transformations import transform_yandex_datetime_value_to_datetime
 
 # region Общие сцены
 
@@ -417,13 +418,13 @@ class GetSchedule(GlobalScene):
     def reply(self, request: Request):
         saved_list = request.user.get(state.STUDENTS, [])
         students = [Student(**s) for s in saved_list]
-        date = transform_yandex_datetime_value_to_datetime(yandex_datetime_value_dict=(request.entity(intents.DATETIME)))
+        req_date = ya_date_transform(request.entity(intents.DATETIME))
         if students:
             current_student: Student = students[0]
         lesson_list = diary_api.get_schedule(
             current_student.school_id,
             current_student.class_id,
-            date.today() + timedelta(days=1),
+            req_date,
         )
         text, tts = texts.get_schedule(lesson_list)
         return self.make_response(request, text, tts)
@@ -447,6 +448,7 @@ def _list_scenes():
         if inspect.isclass(obj) and issubclass(obj, Scene):
             scenes.append(obj)
     return scenes
+
 
 SCENES = {scene.id(): scene for scene in _list_scenes()}
 
