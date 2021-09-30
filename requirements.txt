@@ -2,5 +2,5 @@ pyaspeller
 pymorphy2==0.8
 fluentcheck~=0.2.0
 sentry-sdk
-
 pandas~=0.23.4
+python-dateutil==2.8.0
