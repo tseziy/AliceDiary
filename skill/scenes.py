@@ -1,19 +1,22 @@
 import inspect
 import sys
 from dataclasses import asdict
-from datetime import date, timedelta
 
 import skill.texts as texts
 from skill import diary_api, intents, state
 from skill.alice import Request, button
+from skill.dates_transformations import (
+    transform_yandex_datetime_value_to_datetime as ya_date_transform,
+)
 from skill.scenes_util import Scene
 from skill.schemas import Student
 from skill.dates_transformations import transform_yandex_datetime_value_to_datetime
 
-# region Базовые классы
-
+# region Общие сцены
 
 # класс общая сцена
+
+
 class GlobalScene(Scene):
     def reply(self, request: Request):
         pass
@@ -29,16 +32,24 @@ class GlobalScene(Scene):
         pass
 
     def fallback(self, request: Request):
-        for_save = {}
-        # Сохраним важные состояние
-        for save in state.MUST_BE_SAVE:
-            if save in request.session:
-                for_save.update({save: request.session[save]})
-        return self.make_response(
-            request=request,
-            text="Извините, я вас не понял. Пожалуйста, повторите что Вы сказали",
-            state=for_save,
-        )
+        if request.session.get(state.NEED_FALLBACK, False):
+            text, tts = texts.sorry_and_goodbye()
+            return self.make_response(request, text, tts, end_session=True)
+        else:
+            save_state = {}
+            # Сохраним важные состояние
+            for save in state.MUST_BE_SAVE:
+                if save in request.session:
+                    save_state.update({save: request.session[save]})
+            save_state[state.NEED_FALLBACK] = True
+            text, tts = texts.start_setting_fallback()
+            return self.make_response(
+                request,
+                text,
+                tts,
+                buttons=[button("Помощь")],
+                state=save_state,
+            )
 
 
 class Welcome(GlobalScene):
@@ -56,10 +67,22 @@ class Welcome(GlobalScene):
         )
 
     def handle_local_intents(self, request: Request):
-        if intents.HELP in request.intents:
-            return HelpMenu()
         if intents.CONFIRM in request.intents:
-            return FirstSettingsScene()
+            return Settings_FirstScene()
+        elif intents.REJECT in request.intents:
+            return MaybeHelp()
+
+
+class Goodbye(GlobalScene):
+    def reply(self, request: Request):
+        text, tts = texts.goodbye()
+        return self.make_response(request, text, tts, end_session=True)
+
+
+class SorryAndGoodbye(GlobalScene):
+    def reply(self, request: Request):
+        text, tts = texts.sorry_and_goodbye()
+        return self.make_response(request, text, tts, end_session=True)
 
 
 class HaveMistake(GlobalScene):
@@ -69,7 +92,16 @@ class HaveMistake(GlobalScene):
         return self.make_response(request, text, tts, end_session=True)
 
 
-# region Меню помощи
+class MaybeHelp(GlobalScene):
+    def reply(self, request: Request):
+        text, tts = texts.maybe_you_need_help()
+        return self.make_response(request, text, tts, buttons=YES_NO)
+
+    def handle_local_intents(self, request: Request):
+        if intents.CONFIRM in request.intents:
+            return HelpMenu()
+        elif intents.REJECT in request.intents:
+            return Goodbye()
 
 
 class HelpMenu(GlobalScene):
@@ -86,44 +118,14 @@ class HelpMenu(GlobalScene):
 
 # endregion
 
-# region Setup
-
-
-class SetupScene(GlobalScene):
-    # TODO полноценная логика с указанием:
-    # - количества учеников
-    # - заполнением их school_id, class_id, name по ответам пользователя
-
-    def reply(self, request: Request):
-        text, tts = texts.setup()
-        return self.make_response(
-            request,
-            text,
-            tts,
-            # Пока просто замокал сценарий
-            user_state={
-                state.STUDENTS: [
-                    asdict(
-                        Student(
-                            "Кузьма",
-                            "some-school-id",
-                            "some-class-id",
-                        )
-                    )
-                ]
-            },
-        )
-
-    def handle_local_intents(self, request: Request):
-        return ChooseScenario()
-
-
-# endregion
 
 # region settings
 
 
-class FirstSettingsScene(GlobalScene):
+# region start
+
+
+class Settings_FirstScene(GlobalScene):
     def reply(self, request: Request):
         text, tts = texts.start_setting()
         return self.make_response(request, text, tts, buttons=[button("Помощь")])
@@ -131,6 +133,25 @@ class FirstSettingsScene(GlobalScene):
     def handle_local_intents(self, request: Request):
         if intents.FIO in request.entities_list:
             return Settings_GetSchool()
+
+    def fallback(self, request: Request):
+        if request.session.get(state.NEED_FALLBACK, False):
+            text, tts = texts.sorry_and_goodbye()
+            return self.make_response(request, text, tts, end_session=True)
+        else:
+            text, tts = texts.start_setting_fallback()
+            return self.make_response(
+                request,
+                text,
+                tts,
+                buttons=[button("Помощь")],
+                state={state.NEED_FALLBACK: True},
+            )
+
+
+# endregion
+
+# region school
 
 
 class Settings_GetSchool(GlobalScene):
@@ -149,6 +170,25 @@ class Settings_GetSchool(GlobalScene):
     def handle_local_intents(self, request: Request):
         if intents.NUMBER in request.entities_list:
             return Settings_GetClassNumber()
+
+    def fallback(self, request: Request):
+        if request.session.get(state.NEED_FALLBACK, False):
+            text, tts = texts.sorry_and_goodbye()
+            return self.make_response(request, text, tts, end_session=True)
+        else:
+            text, tts = texts.what_school_fallback()
+            return self.make_response(
+                request,
+                text,
+                tts,
+                buttons=[button("Помощь")],
+                state={state.NEED_FALLBACK: True},
+            )
+
+
+# endregion
+
+# region class number
 
 
 class Settings_GetClassNumber(GlobalScene):
@@ -172,6 +212,54 @@ class Settings_GetClassNumber(GlobalScene):
                     return Settings_Confirm()
                 else:
                     return Settings_GetClassLetter()
+            else:
+                return Settings_IncorrectClassNumber()
+
+    def fallback(self, request: Request):
+        if request.session.get(state.NEED_FALLBACK, False):
+            text, tts = texts.sorry_and_goodbye()
+            return self.make_response(request, text, tts, end_session=True)
+        else:
+            text, tts = texts.what_classnumber_fallback()
+            return self.make_response(
+                request,
+                text,
+                tts,
+                buttons=[button("Помощь")],
+                state={state.NEED_FALLBACK: True},
+            )
+
+
+class Settings_IncorrectClassNumber(GlobalScene):
+    def reply(self, request: Request):
+        text, tts = texts.incorrect_classnumber()
+        return self.make_response(
+            request,
+            text,
+            tts,
+            buttons=[button("Помощь")],
+        )
+
+    def handle_local_intents(self, request: Request):
+        if intents.NUMBER in request.entities_list:
+            class_num = request.entity(intents.NUMBER)[0]
+            if 1 <= class_num <= 11:
+                class_letter = request.tokens[-1].upper()
+                if len(class_letter) == 1 and "А" <= class_letter <= "Я":
+                    return Settings_Confirm()
+                else:
+                    return Settings_GetClassLetter()
+            else:
+                return Settings_IncorrectClassNumber()
+
+    def fallback(self, request):
+        text, tts = texts.sorry_and_goodbye()
+        return self.make_response(request, text, tts, end_session=True)
+
+
+# endregion
+
+# region class letter
 
 
 class Settings_GetClassLetter(GlobalScene):
@@ -194,9 +282,37 @@ class Settings_GetClassLetter(GlobalScene):
         )
 
     def handle_local_intents(self, request: Request):
+        class_letter = request.tokens[-1].upper()
+        if len(class_letter) == 1:
+            if "А" <= class_letter <= "Я":
+                return Settings_Confirm()
+            else:
+                return Settings_IncorrectClassLetter()
+
+
+class Settings_IncorrectClassLetter(GlobalScene):
+    def reply(self, request: Request):
+        text, tts = texts.incorrect_classletter()
+        return self.make_response(
+            request,
+            text,
+            tts,
+            buttons=[button("Помощь")],
+        )
+
+    def handle_local_intents(self, request: Request):
         class_letter = request.tokens[-1]
         if "А" <= class_letter.capitalize() <= "Я":
             return Settings_Confirm()
+        else:
+            return SorryAndGoodbye()
+
+    def fallback(self, request):
+        text, tts = texts.sorry_and_goodbye()
+        return self.make_response(request, text, tts, end_session=True)
+
+
+# endregion
 
 
 class Settings_Confirm(GlobalScene):
@@ -228,7 +344,7 @@ class Settings_Confirm(GlobalScene):
         if intents.CONFIRM in request.intents:
             return Settings_OneMore()
         elif intents.REJECT in request.intents:
-            return Settings_Correct()
+            return Settings_LetsCorrect()
 
 
 class Settings_OneMore(GlobalScene):
@@ -258,14 +374,25 @@ class Settings_OneMore(GlobalScene):
 
     def handle_local_intents(self, request: Request):
         if intents.CONFIRM in request.intents:
-            return FirstSettingsScene()
+            return Settings_FirstScene()
         else:  # TODO Переход на другую основную сцену
             return Welcome()
 
 
-class Settings_Correct(GlobalScene):
-    # TODO: реализовать корректировку настроек. Точнее заново запросить
-    pass
+# endregion
+
+
+class Settings_LetsCorrect(Settings_FirstScene):
+    def reply(self, request: Request):
+        text, tts = texts.discard_settings()
+        text, tts = texts.start_setting()
+        return self.make_response(
+            request,
+            text,
+            tts,
+            buttons=[button("Помощь")],
+            state={state.TEMP_NAME: "", state.TEMP_SCHOOL: "", state.TEMP_CLASS_ID: ""},
+        )
 
 
 # endregion
@@ -292,13 +419,13 @@ class GetSchedule(GlobalScene):
     def reply(self, request: Request):
         saved_list = request.user.get(state.STUDENTS, [])
         students = [Student(**s) for s in saved_list]
-        date = transform_yandex_datetime_value_to_datetime(yandex_datetime_value_dict=(request.entity(intents.DATETIME)))
+        req_date = ya_date_transform(request.entity(intents.DATETIME))
         if students:
             current_student: Student = students[0]
         lesson_list = diary_api.get_schedule(
             current_student.school_id,
             current_student.class_id,
-            date.today() + timedelta(days=1),
+            req_date,
         )
         text, tts = texts.get_schedule(lesson_list)
         return self.make_response(request, text, tts)

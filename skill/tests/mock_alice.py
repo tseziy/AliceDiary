@@ -133,19 +133,19 @@ class AliceEntity:
     @chained
     def datetime(
         self,
-        year="",
-        year_is_relative=False,
-        month="",
-        month_is_relative=False,
-        day="",
-        day_is_relative=False,
-        hour="",
-        hour_is_relative=False,
-        minute="",
-        minute_is_relative=False,
+        year=None,
+        year_is_relative=None,
+        month=None,
+        month_is_relative=None,
+        day=None,
+        day_is_relative=None,
+        hour=None,
+        hour_is_relative=None,
+        minute=None,
+        minute_is_relative=None,
     ):
         self.type = "YANDEX.DATETIME"
-        self.value = {
+        value = {
             "year": year,
             "year_is_relative": year_is_relative,
             "month": month,
@@ -157,6 +157,8 @@ class AliceEntity:
             "minute": minute,
             "minute_is_relative": minute_is_relative,
         }
+        value = {k: v for k, v in value.items() if v is not None}
+        self.value = value
 
     def val(self):
         return {"type": self.type, "value": self.value}
@@ -301,7 +303,7 @@ class AliceAnswer:
         return self.session_state.get("scene")
 
     def get_state_session(self, state: str):
-        return self.session_state.get(state, "")
+        return self.session_state.get(state, None)
 
     def get_state_user(self, state: str):
-        return self.user_state.get(state, "")
+        return self.user_state.get(state, None)
