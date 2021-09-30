@@ -1,6 +1,10 @@
 root:
-    .* $schedule .*
-
+    .* $schedule .* ($where)?
+$where:     
+    сегодня
+    завтра
+    вчера
 $schedule:
     %lemma
     расписание
+    какие уроки

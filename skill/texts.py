@@ -30,8 +30,27 @@ def mistake():
     return text, text
 
 
+def sorry_and_goodbye():
+    text = """Прошу прощения. Я очень стараюсь Вас понять.
+    Но не получается. Возможно мне надо отдохнуть. Возвращайтесь попозже.
+    До свидания!"""
+
+    tts = text
+    return text, tts
+
+
+def maybe_you_need_help():
+    text = """Возможно, вам не хватает информации.
+    Давайте я расскажу, что умею.
+    Рассказать?"""
+
+    tts = text
+    return text, tts
+
+
 def goodbye():
-    text = "Возвращайтесь в любое время." "До свидания!"
+    text = """Возвращайтесь в любое время.
+    До свидания!"""
     tts = "<speaker audio='alice-sounds-game-loss-3.opus'>" + text
     return text, tts
 
@@ -48,14 +67,6 @@ def help_menu_fallback():
     Скажите "Помощь", чтобы снова получить подсказки."""
 
     return text, text
-
-
-def setup():
-    #  TODO полноценный сценарий настройки
-    text = "Укажите данные учеников"
-    tts = text
-
-    return text, tts
 
 
 def choose_scenario():
@@ -85,6 +96,14 @@ def start_setting():
     return text, tts
 
 
+def start_setting_fallback():
+    text = """Простите, что-то я Вас не поняла
+    Скажите имя ученика, пожалуйста."""
+
+    tts = "<speaker audio='alice-sounds-human-kids-1.opus'>" + text
+    return text, tts
+
+
 def what_school(name):
 
     if name == "Алиса":
@@ -97,27 +116,68 @@ def what_school(name):
         "Артём",
         "Вова",
         "Владимир",
+        "Володя",
         "Максим",
+        "Макс",
     ]:
-        start_phrase = "Надо же! Одного из моих создателей тоже так зовут!"
+        start_phrase = "Надо же! Одного из создателей навыка тоже так зовут!"
     else:
         start_phrase = "Хорошо."
 
-    text = f"{start_phrase} В какой школе учится?"
+    text = f"{start_phrase} В какой школе учится? Скажите номер школы"
     tts = text
 
     return text, tts
 
 
+def what_school_fallback():
+    text = """Простите, что-то я Вас не поняла
+    Скажите номер школы, пожалуйста. Например, Лицей 110"""
+
+    tts = "<speaker audio='alice-sounds-human-kids-1.opus'>" + text
+    return text, tts
+
+
 def what_classnumber():
-    text = "А в каком классе учится?"
-    tts = text
+    text = """А в каком классе учится?
+    Скажите номер класса. Например, 5 А"""
+    tts = """А в каком классе учится?
+    Скажите номер класса. Например, пятый - А"""
+    return text, tts
+
+
+def what_classnumber_fallback():
+    text = """Простите, что-то я Вас не поняла
+    В каком классе сейчас учится? Например, 5 А"""
+
+    tts = """<speaker audio='alice-sounds-human-kids-1.opus'>
+    Простите, что-то я Вас не поняла
+    В каком классе сейчас учится? Например, пятый - А"""
+    return text, tts
+
+
+def incorrect_classnumber():
+    text = """Извините. Похоже Вы назвали неправильный номер класса.
+    Нумерация классов начинается с 1 и по 11.
+    Повторите, пожалуйста, номер класса? Цифру от 1 до 11"""
+    tts = """Извините. Похоже Вы назвали неправильный номер класса.
+    Нумерация классов начинается с первого и по одиннадцатый.
+    Повторите, пожалуйста, номер класса? Цифру от одного до одиннадцати"""
 
     return text, tts
 
 
 def what_classletter():
     text = "Подскажите, какая буква у класса?"
+    tts = text
+
+    return text, tts
+
+
+def incorrect_classletter():
+    text = """Извините. Похоже Вы назвали неправильную букву класса.
+    Классы содержат буквы от А до Я.
+    Повторите, пожалуйста, букву класса? От А до Я"""
     tts = text
 
     return text, tts
@@ -136,6 +196,14 @@ def one_more_student():
     text = "Здорово! Все запомнила. Добавим еще одного ученика?"
     tts = text
 
+    return text, tts
+
+
+def discard_settings():
+    text = """Ох, ну надо же! Все мы допускаем ошибки. Давайте попробуем еще раз.
+    Как зовут ученика?"""
+
+    tts = text
     return text, tts
 
 

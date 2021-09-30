@@ -1,7 +1,14 @@
 STATE_REQUEST_KEY = "session"
 STATE_RESPONSE_KEY = "session_state"
 USERSTATE_RESPONSE_KEY = "user_state_update"
+
+# Отладочная информация
+# Последние фразы пользователя
 PREVIOUS_MOVES = "prev_moves"
+
+# признак уточнения после того, как не смогли разобрать фразу.
+# Если снова не разобрали - выходим
+NEED_FALLBACK = "fallback"
 
 # region State of dialog
 
@@ -22,4 +29,4 @@ TEMP_CLASS_ID = "temp_class_id"
 MUST_BE_SAVE = {PREVIOUS_STATE, NEXT_BUTTON}
 
 # Эти состояния сохраняются на каждый ход
-PERMANENT_VALUES = {"temp_name", "temp_school", "temp_classId"}
+PERMANENT_VALUES = {TEMP_NAME, TEMP_SCHOOL, TEMP_CLASS_ID}

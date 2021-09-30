@@ -301,7 +301,7 @@ class AliceAnswer:
         return self.session_state.get("scene")
 
     def get_state_session(self, state: str):
-        return self.session_state.get(state, "")
+        return self.session_state.get(state, None)
 
     def get_state_user(self, state: str):
-        return self.user_state.get(state, "")
+        return self.user_state.get(state, None)
