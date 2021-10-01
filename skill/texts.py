@@ -1,7 +1,7 @@
+import random
 from typing import List
 
 import pymorphy2
-import random
 
 from skill.schemas import PlannedLesson
 
@@ -191,6 +191,16 @@ def what_classletter():
     text = "Подскажите, какая буква у класса?"
     tts = text
 
+    return text, tts
+
+
+def what_classlatter_fallback():
+    text = """Простите, что-то я Вас не поняла
+    Подскажите, какая буква у класса? Например, А"""
+
+    tts = """<speaker audio='alice-sounds-human-kids-1.opus'>
+    Простите, что-то я Вас не поняла
+    Подскажите, какая буква у класса? Например, А"""
     return text, tts
 
 

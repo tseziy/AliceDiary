@@ -296,6 +296,20 @@ class Settings_GetClassLetter(GlobalScene):
             else:
                 return Settings_IncorrectClassLetter()
 
+    def fallback(self, request: Request):
+        if request.session.get(state.NEED_FALLBACK, False):
+            text, tts = texts.sorry_and_goodbye()
+            return self.make_response(request, text, tts, end_session=True)
+        else:
+            text, tts = texts.what_classlatter_fallback()
+            return self.make_response(
+                request,
+                text,
+                tts,
+                buttons=[button("Помощь")],
+                state={state.NEED_FALLBACK: True},
+            )
+
 
 class Settings_IncorrectClassLetter(GlobalScene):
     def reply(self, request: Request):

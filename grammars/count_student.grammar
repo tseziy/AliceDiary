@@ -1,6 +1,0 @@
-root:
-    .* $Count .*
-slots:
-    count:
-        source: $Count
-        type: Count
