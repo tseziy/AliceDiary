@@ -23,15 +23,20 @@ def get_schedule(
     school_id: str, class_id: str, day=None, lessons=[]
 ) -> List[PlannedLesson]:
 
-    temp = df.loc[(df["school_id"] == school_id) & (df["class_id"] == class_id)]
+    result = []
+
     if day is None:
         day = date.today().strftime("%d.%m.%Y")
 
-    temp = temp.loc[df["date"] == day]
+    temp = df.loc[
+        (df["school_id"] == school_id)
+        & (df["class_id"] == class_id)
+        & (df["date"] == day)
+    ]
 
     if lessons:
-        temp = temp.loc[df["lesson"].isin(lessons)]
-    result = []
+        temp = temp.loc[temp["lesson"].isin(lessons)]
+
     for index, row in temp.iterrows():
         result.append(PlannedLesson(row["lesson"], row["time_start"]))
 
@@ -40,20 +45,21 @@ def get_schedule(
 
 def get_homework(school_id: str, class_id: str, day=None, lessons=[]) -> List[Homework]:
 
-    temp = df.loc[
-        (df["school_id"] == school_id)
-        & (df["class_id"] == class_id)
-        & (df["homework"] != "")
-    ]
+    result = []
 
     if day is None:
         day = date.today().strftime("%d.%m.%Y")
 
-    temp = temp.loc[df["date"] == day]
+    temp = df.loc[
+        (df["school_id"] == school_id)
+        & (df["class_id"] == class_id)
+        & (df["homework"] != "")
+        & (df["date"] == day)
+    ]
 
     if lessons:
-        temp = temp.loc[df["lesson"].isin(lessons)]
-    result = []
+        temp = temp.loc[temp["lesson"].isin(lessons)]
+
     for index, row in temp.iterrows():
         result.append(Homework(row["lesson"], row["homework"]))
 

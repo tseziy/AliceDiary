@@ -1,6 +1,7 @@
 from typing import List
 
 import pymorphy2
+import random
 
 from skill.schemas import PlannedLesson
 
@@ -18,6 +19,22 @@ def hello(start_text=None):
         Я могу подсказать расписание уроков или напомнить, что задали домой.
         Но для начала надо выполнить простые настройки.
         Готовы продолжить?"""
+
+    tts = text
+    return text, tts
+
+
+def hello_user_variable(start_text=None):
+
+    hello_mes = [
+        """Привет! Это цифровой дневник. Но мы уже знакомы
+        Какой вопрос сегодня расписание или домашнее задание?""",
+        """Привет! Это цифровой дневник.
+        Я могу подсказать расписание уроков или напомнить, что задали домой.""",
+    ]
+
+    if start_text is None:
+        text = random.choice(hello_mes)
 
     tts = text
     return text, tts
@@ -77,8 +94,11 @@ def choose_scenario():
 
 
 def get_schedule(lessons: List[PlannedLesson]):
-    text = "Список уроков:\n"
-    text += "\n".join(str(lesson) for lesson in lessons)
+    if lessons:
+        text = "Список уроков:\n"
+        text += "\n".join(str(lesson) for lesson in lessons)
+    else:
+        text = "Извините, но в расписании ничего нет."
     tts = text
 
     return text, tts
