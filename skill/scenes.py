@@ -12,7 +12,7 @@ from skill.scenes_util import Scene
 from skill.schemas import Student
 from skill.dates_transformations import transform_yandex_datetime_value_to_datetime
 import pandas as pd
-from datetime import datetime
+
 # region Общие сцены
 
 # класс общая сцена
@@ -444,13 +444,17 @@ class GetSchedule(GlobalScene):
     def reply(self, request: Request):
         saved_list = request.user.get(state.STUDENTS, [])
         students = [Student(**s) for s in saved_list]
-        req_date = ya_date_transform(request.entity(intents.DATETIME)[0])
+        if intents.DATETIME in request.entities_list:
+            ya_date = request.entity(intents.DATETIME)[0]
+            ya_date = ya_date_transform(ya_date)
+        else:
+            ya_date = None
         if students:
             current_student: Student = students[0]
         lesson_list = diary_api.get_schedule(
             current_student.school_id,
             current_student.class_id,
-            req_date,
+            ya_date,
         )
         text, tts = texts.get_schedule(lesson_list)
 

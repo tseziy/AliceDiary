@@ -106,8 +106,8 @@ def schedule():
             "students": [
                 {
                     "name": "Кузьма",
-                    "school_id": "some-school-id",
-                    "class_id": "some-class-id",
+                    "school_id": "5",
+                    "class_id": "1А",
                 }
             ]
         },
