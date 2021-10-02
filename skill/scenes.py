@@ -1,15 +1,14 @@
 import inspect
 import sys
 from dataclasses import asdict
+from typing import List
 
 import skill.texts as texts
 from skill import diary_api, entities, intents, state
 from skill.alice import Request, button, image_button, image_list
-from skill.dates_transformations import (
-    transform_yandex_datetime_value_to_datetime as ya_date_transform,
-)
+from skill.dates_transformations import transform_yandex_datetime_value_to_datetime as ya_date_transform
 from skill.scenes_util import Scene
-from skill.schemas import Homework, Student
+from skill.schemas import Homework, PlannedLesson, Student
 
 # region Общие сцены
 
@@ -459,17 +458,40 @@ class GetSchedule(GlobalScene):
         )
         if not lesson_list:
             text, tts = texts.no_schedule()
+            return self.make_response(
+                request,
+                text,
+                tts,
+                buttons=[
+                    button("Домашнее задание"),
+                    button("Расписание"),
+                ],
+            )
         else:
             text, tts = texts.tell_about_schedule(lesson_list)
+            cards = _prepare_cards_hw(hw)
+            text, tts = texts.tell_about_homework(hw, len(homework))
+            buttons = [
+                    button("Домашнее задание"),
+                    button("Расписание"),
+            ]
+            return self.make_response(
+                request,
+                text,
+                tts,
+                card=image_list(cards, header=text),
+                buttons=buttons,
+                state={
+                    state.LIST_HW: [asdict(x) for x in homework],
+                    state.TASKS_HW: len(homework),
+                    state.SKIP_HW: 0,
+                },
+            )
 
         return self.make_response(request, text, tts)
 
     def handle_local_intents(self, request: Request):
-        if intents.GET_SCHEDULE in request.intents:
-            return GetSchedule()
-        elif intents.GET_HOMEWORK in request.intents:
-            return GetHomework()
-        elif intents.REJECT in request.intents:
+        if intents.REJECT in request.intents:
             return MaybeHelp()
 
 
@@ -605,9 +627,15 @@ def _split_homework(homework: list):
     return list_hw
 
 
-def _prepare_cards_hw(homeworks: list):
+def _prepare_cards_hw(homeworks: List[Homework]):
     return [
         image_button(title=x.lesson.capitalize(), description=x.task) for x in homeworks
+    ]
+
+
+def _prepare_cards_lessons(lessons: List[PlannedLesson]):
+    return [
+        image_button(title=x.lesson.capitalize(), description=x.duration) for x in lessons
     ]
 
 
