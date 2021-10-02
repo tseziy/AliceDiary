@@ -41,7 +41,7 @@ class GlobalScene(Scene):
                 if save in request.session:
                     save_state.update({save: request.session[save]})
             save_state[state.NEED_FALLBACK] = True
-            text, tts = texts.start_setting_fallback()
+            text, tts = texts.help_menu_fallback()
             return self.make_response(
                 request,
                 text,
@@ -53,16 +53,22 @@ class GlobalScene(Scene):
 
 class Welcome(GlobalScene):
     def reply(self, request: Request):
-        text, tts = texts.hello()
+        saved_list = request.user.get(state.STUDENTS, [])
+        if saved_list:
+            text, tts = texts.hello_user_variable()
+            buttons = []
+        else:
+            text, tts = texts.hello()
+            buttons = [
+                button("Да"),
+                button("Помощь"),
+            ]
 
         return self.make_response(
             request,
             text,
             tts,
-            buttons=[
-                button("Да"),
-                button("Помощь"),
-            ],
+            buttons,
         )
 
     def handle_local_intents(self, request: Request):
@@ -70,6 +76,8 @@ class Welcome(GlobalScene):
             return Settings_FirstScene()
         elif intents.REJECT in request.intents:
             return MaybeHelp()
+        elif intents.GET_SCHEDULE in request.intents:
+            return GetSchedule()
 
 
 class Goodbye(GlobalScene):
@@ -288,6 +296,20 @@ class Settings_GetClassLetter(GlobalScene):
             else:
                 return Settings_IncorrectClassLetter()
 
+    def fallback(self, request: Request):
+        if request.session.get(state.NEED_FALLBACK, False):
+            text, tts = texts.sorry_and_goodbye()
+            return self.make_response(request, text, tts, end_session=True)
+        else:
+            text, tts = texts.what_classlatter_fallback()
+            return self.make_response(
+                request,
+                text,
+                tts,
+                buttons=[button("Помощь")],
+                state={state.NEED_FALLBACK: True},
+            )
+
 
 class Settings_IncorrectClassLetter(GlobalScene):
     def reply(self, request: Request):
@@ -374,8 +396,8 @@ class Settings_OneMore(GlobalScene):
     def handle_local_intents(self, request: Request):
         if intents.CONFIRM in request.intents:
             return Settings_FirstScene()
-        else:  # TODO Переход на другую основную сцену
-            return Welcome()
+        else:
+            return ChooseScenario()
 
 
 # endregion
@@ -409,6 +431,8 @@ class ChooseScenario(GlobalScene):
             return GetSchedule()
         elif intents.GET_HOMEWORK in request.intents:
             return GetHomework()
+        elif intents.REJECT in request.intents:
+            return MaybeHelp()
 
 
 class GetSchedule(GlobalScene):
@@ -427,10 +451,16 @@ class GetSchedule(GlobalScene):
             req_date,
         )
         text, tts = texts.get_schedule(lesson_list)
+
         return self.make_response(request, text, tts)
 
     def handle_local_intents(self, request: Request):
-        return ChooseScenario()
+        if intents.GET_SCHEDULE in request.intents:
+            return GetSchedule()
+        elif intents.GET_HOMEWORK in request.intents:
+            return GetHomework()
+        elif intents.REJECT in request.intents:
+            return MaybeHelp()
 
 
 class GetHomework(GlobalScene):

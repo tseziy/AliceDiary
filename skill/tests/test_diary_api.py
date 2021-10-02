@@ -2,6 +2,8 @@ from fluentcheck import Check
 
 import skill.diary_api as api
 
+# region Расписание
+
 
 def test_get_all_lesson_by_date():
     test_date = "27.09.2021"
@@ -26,11 +28,17 @@ def test_get_filter_lesson_by_date_must_be_empty():
     assert len(result) == 0
 
 
+# endregion
+
+
+# region Домашнее задание
+
+
 def test_get_all_homework_by_date():
     test_date = "28.09.2021"
     result = api.get_homework("5", "1А", day=test_date)
     Check(result).is_list()
-    assert len(result) == 3
+    assert len(result) == 2
 
 
 def test_get_filter_homework_by_date():
@@ -43,7 +51,10 @@ def test_get_filter_homework_by_date():
 
 def test_get_filter_homework_by_date_must_be_empty():
     test_date = "28.09.2021"
-    lessons = ["Математика"]
+    lessons = ["Технология"]
     result = api.get_homework("5", "1А", day=test_date, lessons=lessons)
     Check(result).is_list()
     assert len(result) == 0
+
+
+# endregion
