@@ -77,8 +77,11 @@ def choose_scenario():
 
 
 def get_schedule(lessons: List[PlannedLesson]):
-    text = "Список уроков:\n"
-    text += "\n".join(str(lesson) for lesson in lessons)
+    if len(lessons) == 0:
+        text = "Ох, не удалось получить расписание"
+    else:
+        text = "Список уроков:\n"
+        text += "\n".join(str(lesson) for lesson in lessons)
     tts = text
 
     return text, tts

@@ -23,11 +23,11 @@ def get_schedule(
     school_id: str, class_id: str, day=None, lessons=[]
 ) -> List[PlannedLesson]:
 
-    temp = df.loc[(df["school_id"] == school_id) & (df["class_id"] == class_id)]
+    temp = df.loc[(df["school_id"] == str(school_id)) & (df["class_id"] == class_id)]
     if day is None:
         day = date.today().strftime("%d.%m.%Y")
 
-    temp = temp.loc[df["date"] == day]
+    temp = temp.loc[df["date"] == format(day, "%d.%m.%Y")]
 
     if lessons:
         temp = temp.loc[df["lesson"].isin(lessons)]
