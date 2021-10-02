@@ -252,8 +252,8 @@ def no_homework():
 
 def tell_about_homework(list_of_homework: list, tasks: int):
 
-    text = f"Всего {tasks} заданий."
-    tts = f"Всего {tasks} заданий."
+    text = f"Заданий: {tasks}"
+    tts = "Всего " + __how_many_tasks(tasks)
     for hw in list_of_homework:
         tts += __tell_about_task(hw.lesson, hw.task)
     tts += "sil<[200]> Скажите Повтори, если хотите послушать еще раз"
@@ -263,6 +263,11 @@ def tell_about_homework(list_of_homework: list, tasks: int):
 
 def __tell_about_task(lesson: str, task: str):
     return f"sil<[200]> {lesson} sil<[300]> {task}"
+
+
+def __how_many_tasks(n: int) -> str:
+    tasks = morph.parse('задание')[0].make_agree_with_number(n).word
+    return str(n) + " " + tasks
 
 
 # endregion

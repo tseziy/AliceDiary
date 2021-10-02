@@ -551,7 +551,7 @@ class TellAboutHomework(GlobalScene):
         hw_dict = request.session.get(state.LIST_HW)
         hw = _split_homework([Homework(**x) for x in hw_dict])
         full = request.session.get(state.TASKS_HW)
-        step = (request.session.get(state.SKIP_HW) + self.__step) % full
+        step = (request.session.get(state.SKIP_HW) + self.__step) % len(hw)
 
         cards = _prepare_cards_hw(hw[step])
 

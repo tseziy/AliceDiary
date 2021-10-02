@@ -14,6 +14,8 @@ df = pd.read_csv(
     dtype="str",
 )
 df["date"] = pd.to_datetime(df["date"], format="%d.%m.%Y")
+df["time_start"] = pd.to_datetime(df["time_start"], format="%H:%M")
+df["time_end"] = pd.to_datetime(df["time_end"], format="%H:%M")
 df["lesson"] = df["lesson"].str.lower()
 df.fillna("", inplace=True)
 
