@@ -1,4 +1,5 @@
 from fluentcheck import Check
+from datetime import datetime
 
 import skill.diary_api as api
 
@@ -6,14 +7,14 @@ import skill.diary_api as api
 
 
 def test_get_all_lesson_by_date():
-    test_date = "27.09.2021"
+    test_date = datetime(2021, 9, 27, 0, 0)
     result = api.get_schedule("5", "1А", day=test_date)
     Check(result).is_list()
     assert len(result) == 4
 
 
 def test_get_filter_lesson_by_date():
-    test_date = "27.09.2021"
+    test_date = datetime(2021, 9, 27, 0, 0)
     lessons = ["Чтение"]
     result = api.get_schedule("5", "1А", day=test_date, lessons=lessons)
     Check(result).is_list()
@@ -21,7 +22,7 @@ def test_get_filter_lesson_by_date():
 
 
 def test_get_filter_lesson_by_date_must_be_empty():
-    test_date = "27.09.2021"
+    test_date = datetime(2021, 9, 27, 0, 0)
     lessons = ["Русский язык"]
     result = api.get_schedule("5", "1А", day=test_date, lessons=lessons)
     Check(result).is_list()
@@ -35,7 +36,7 @@ def test_get_filter_lesson_by_date_must_be_empty():
 
 
 def test_get_all_homework_by_date():
-    test_date = "28.09.2021"
+    test_date = datetime(2021, 9, 28, 0, 0)
     result = api.get_homework("5", "1А", day=test_date)
     Check(result).is_list()
     assert len(result) == 2

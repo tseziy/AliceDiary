@@ -25,7 +25,7 @@ def get_schedule(
     school_id: str, class_id: str, day=None, lessons=[]
 ) -> List[PlannedLesson]:
 
-    all_schedule = df.loc[(df["school_id"] == school_id) & (df["class_id"] == class_id)]
+    all_schedule = df.loc[(df["school_id"] == str(school_id)) & (df["class_id"] == str(class_id))]
     if day is None:
         day = date.today()
 
@@ -40,7 +40,7 @@ def get_schedule(
 
 def __schedule(schedule: pandas.DataFrame, day: date, lessons: list):
     return schedule.loc[
-        (schedule["date"] == pd.Timestamp(day))
+        (schedule["date"] == pd.Timestamp(pd.Timestamp(day.combine(day.date(), day.min.time()))))
         & (not lessons or schedule["lesson"].isin(lessons))
     ]
 

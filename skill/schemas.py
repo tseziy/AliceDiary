@@ -15,7 +15,8 @@ class PlannedLesson:
     time: time
 
     def __str__(self):
-        return f"{self.name} в {self.time.strftime('%H:%M')}"
+        # TODO операция со временем
+        return f"{self.name} в {self.time}"
 
 
 @dataclass
