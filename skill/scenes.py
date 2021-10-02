@@ -28,6 +28,8 @@ class GlobalScene(Scene):
             return HelpMenu()
         if intents.GET_HOMEWORK in request.intents:
             return GetHomework()
+        if intents.GET_SCHEDULE in request.intents:
+            return GetSchedule()
 
     def handle_local_intents(self, request: Request):
         pass
@@ -455,7 +457,10 @@ class GetSchedule(GlobalScene):
             current_student.class_id,
             ya_date,
         )
-        text, tts = texts.get_schedule(lesson_list)
+        if not lesson_list:
+            text, tts = texts.no_schedule()
+        else:
+            text, tts = texts.tell_about_schedule(lesson_list)
 
         return self.make_response(request, text, tts)
 
