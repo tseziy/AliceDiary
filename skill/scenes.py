@@ -454,6 +454,7 @@ class GetSchedule(GlobalScene):
 
         return self.make_response(request, text, tts)
 
+
     def handle_local_intents(self, request: Request):
         if intents.GET_SCHEDULE in request.intents:
             return GetSchedule()
