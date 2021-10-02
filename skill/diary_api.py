@@ -1,8 +1,8 @@
+import datetime
 import os
-from datetime import date
+from datetime import date, time
 from typing import List
 
-import pandas
 import pandas as pd
 
 from skill.schemas import Homework, PlannedLesson
@@ -14,6 +14,7 @@ df = pd.read_csv(
     dtype="str",
 )
 df["date"] = pd.to_datetime(df["date"], format="%d.%m.%Y")
+df["lesson"] = df["lesson"].str.lower()
 df.fillna("", inplace=True)
 
 
@@ -25,7 +26,9 @@ def get_schedule(
     school_id: str, class_id: str, day=None, lessons=[]
 ) -> List[PlannedLesson]:
 
-    all_schedule = df.loc[(df["school_id"] == str(school_id)) & (df["class_id"] == str(class_id))]
+    all_schedule = df.loc[
+        (df["school_id"] == str(school_id)) & (df["class_id"] == str(class_id))
+    ]
     if day is None:
         day = date.today()
 
@@ -38,10 +41,11 @@ def get_schedule(
     return result
 
 
-def __schedule(schedule: pandas.DataFrame, day: date, lessons: list):
+def __schedule(schedule: pd.DataFrame, day: date, lessons: list) -> pd.DataFrame:
+    lessons_filter = [x.lower() for x in lessons]
     return schedule.loc[
-        (schedule["date"] == pd.Timestamp(pd.Timestamp(day.combine(day.date(), day.min.time()))))
-        & (not lessons or schedule["lesson"].isin(lessons))
+        (schedule["date"] == pd.Timestamp(datetime.datetime.combine(day, time())))
+        & (not lessons or schedule["lesson"].isin(lessons_filter))
     ]
 
 
@@ -54,7 +58,7 @@ def get_homework(school_id: str, class_id: str, day=None, lessons=[]) -> List[Ho
         hw = __homework_day_no_lessons(all_schedule, day)
     elif day is None and lessons:
         hw = __homework_no_day_lessons(all_schedule, lessons)
-    elif day is None and not lessons():
+    elif day is None and not lessons:
         hw = __homework_no_day_no_lessons(all_schedule)
     else:
         raise Exception("Этого быть не может")
@@ -65,23 +69,23 @@ def get_homework(school_id: str, class_id: str, day=None, lessons=[]) -> List[Ho
     return homework
 
 
-def __homework_day_lessons(schedule: pandas.DataFrame, day: date, lessons: list):
+def __homework_day_lessons(schedule: pd.DataFrame, day: date, lessons: list):
     return __slice_schedule(schedule, day, lessons)
 
 
-def __homework_day_no_lessons(schedule: pandas.DataFrame, day: date):
+def __homework_day_no_lessons(schedule: pd.DataFrame, day: date):
     lessons = [row["lesson"] for index, row in __schedule(schedule, day, []).iterrows()]
     return __slice_schedule(schedule, day, lessons)
 
 
-def __homework_no_day_lessons(schedule: pandas.DataFrame, lessons: list):
-    day = date.today() + date.timedelta(days=1)
-    return __slice_schedule(schedule, day, lessons)
+def __homework_no_day_lessons(schedule: pd.DataFrame, lessons: list):
+    tomorrow = date.today() + datetime.timedelta(days=1)
+    return __slice_schedule(schedule, tomorrow, lessons)
 
 
-def __homework_no_day_no_lessons(schedule: pandas.DataFrame):
+def __homework_no_day_no_lessons(schedule: pd.DataFrame):
     today = date.today()
-    tomorrow = date.today() + date.timedelta(days=1)
+    tomorrow = today + datetime.timedelta(days=1)
     lessons = [
         row["lesson"] for index, row in __schedule(schedule, today, []).iterrows()
     ] + [row["lesson"] for index, row in __schedule(schedule, tomorrow, []).iterrows()]
@@ -89,10 +93,11 @@ def __homework_no_day_no_lessons(schedule: pandas.DataFrame):
     return __slice_schedule(schedule, tomorrow, lessons)
 
 
-def __slice_schedule(schedule: pandas.DataFrame, day: date, lessons: list):
-
+def __slice_schedule(schedule: pd.DataFrame, day: date, lessons: list):
+    lessons_filter = [x.lower() for x in lessons]
     df_prev = schedule.loc[
-        (schedule["date"] <= pd.Timestamp(day)) & (schedule["lesson"].isin(lessons))
+        (schedule["date"] <= pd.Timestamp(day))
+        & (schedule["lesson"].isin(lessons_filter))
     ]
     df_prev = df_prev.groupby("lesson").agg({"date": "max"})
     slice = schedule.merge(df_prev, on=["date", "lesson"], how="inner")

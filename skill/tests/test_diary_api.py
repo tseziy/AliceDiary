@@ -1,5 +1,6 @@
-from fluentcheck import Check
 from datetime import datetime
+
+from fluentcheck import Check
 
 import skill.diary_api as api
 

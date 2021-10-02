@@ -238,3 +238,31 @@ def discard_settings():
 
 
 # endregion
+
+
+# region Домашняя работа
+
+
+def no_homework():
+    text = """Ничего не задали. Можно отдохнуть, почитать или поиграть.
+    Хочешь узнать что-нибудь еще? Задания на другой день или расписание?"""
+    tts = text
+    return text, tts
+
+
+def tell_about_homework(list_of_homework: list, tasks: int):
+
+    text = f"Всего {tasks} заданий."
+    tts = f"Всего {tasks} заданий."
+    for hw in list_of_homework:
+        tts += __tell_about_task(hw.lesson, hw.task)
+    tts += "sil<[200]> Скажите Повтори, если хотите послушать еще раз"
+
+    return text, tts
+
+
+def __tell_about_task(lesson: str, task: str):
+    return f"sil<[200]> {lesson} sil<[300]> {task}"
+
+
+# endregion

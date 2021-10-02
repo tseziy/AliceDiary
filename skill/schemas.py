@@ -22,4 +22,4 @@ class PlannedLesson:
 @dataclass
 class Homework:
     lesson: str
-    homework: str
+    task: str

@@ -8,15 +8,8 @@ REPEAT = "YANDEX.REPEAT"
 
 # endregion
 
-# region Entities of yandex
-
-FIO = "YANDEX.FIO"
-NUMBER = "YANDEX.NUMBER"
-DATETIME = "YANDEX.DATETIME"
-
-# endregion
+NEXT = "next"
+PREV = "prev"
 
 GET_SCHEDULE = "get_schedule"
-GET_HOMEWORK = "get_homework"
-COUNT_STUDENTS = "count_student"
-COUNT = ["one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten"]
+GET_HOMEWORK = "homework"
