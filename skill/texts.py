@@ -105,16 +105,16 @@ def no_schedule():
 
 
 def tell_about_schedule(list_of_lessons: List[PlannedLesson]):
-    text = "Уроков: " + len(list_of_lessons)
+    text = "Уроков: " + str(len(list_of_lessons))
     tts = "Всего " + __how_many_lessons(len(list_of_lessons))
     for lesson in list_of_lessons:
-        tts += __tell_about_lesson(lesson.lesson, lesson.start)
+        tts += __tell_about_lesson(lesson.name, lesson.end_time)
     tts += "sil<[200]> Скажите Повтори, если хотите послушать еще раз"
     return text, tts
 
 
 def __tell_about_lesson(lesson: str, time: str):
-    return f"sil<[200]> {lesson} начинается в sil<[300]> {task}"
+    return f"sil<[200]> {lesson} начинается в sil<[300]> {time}"
 
 
 def __how_many_lessons(n: int) -> str:

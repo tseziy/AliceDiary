@@ -36,7 +36,7 @@ def get_schedule(
 
     schedule = __schedule(all_schedule, day, lessons)
     result = [
-        PlannedLesson(row["lesson"], row["time_start"], row["time_start"])
+        PlannedLesson(row["lesson"], row["time_start"].time(), row["time_start"].time())
         for index, row in schedule.iterrows()
     ]
 

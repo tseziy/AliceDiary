@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from datetime import time
+from datetime import datetime, time
 
 
 @dataclass
@@ -17,11 +17,11 @@ class PlannedLesson:
 
     @property
     def start_time(self):
-        return time.strftime(self.start, "%Н:%M")
+        return time.strftime(self.start, '%H:%M')
 
     @property
     def end_time(self):
-        return time.strftime(self.end, "%Н:%M")
+        return time.strftime(self.end, '%H:%M')
 
     @property
     def duration(self):

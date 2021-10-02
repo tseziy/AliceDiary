@@ -468,9 +468,8 @@ class GetSchedule(GlobalScene):
                 ],
             )
         else:
+            cards = _prepare_cards_lessons(lesson_list)
             text, tts = texts.tell_about_schedule(lesson_list)
-            cards = _prepare_cards_hw(hw)
-            text, tts = texts.tell_about_homework(hw, len(homework))
             buttons = [
                     button("Домашнее задание"),
                     button("Расписание"),
@@ -481,11 +480,6 @@ class GetSchedule(GlobalScene):
                 tts,
                 card=image_list(cards, header=text),
                 buttons=buttons,
-                state={
-                    state.LIST_HW: [asdict(x) for x in homework],
-                    state.TASKS_HW: len(homework),
-                    state.SKIP_HW: 0,
-                },
             )
 
         return self.make_response(request, text, tts)
@@ -635,7 +629,7 @@ def _prepare_cards_hw(homeworks: List[Homework]):
 
 def _prepare_cards_lessons(lessons: List[PlannedLesson]):
     return [
-        image_button(title=x.lesson.capitalize(), description=x.duration) for x in lessons
+        image_button(title=x.name.capitalize(), description=x.duration) for x in lessons
     ]
 
 
