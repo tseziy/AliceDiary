@@ -12,11 +12,8 @@ class Student:
 @dataclass
 class PlannedLesson:
     name: str
-    time: time
-
-    def __str__(self):
-        # TODO операция со временем
-        return f"{self.name} в {self.time}"
+    start: time
+    end: time
 
 
 @dataclass

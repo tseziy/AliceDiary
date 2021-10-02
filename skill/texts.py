@@ -3,7 +3,7 @@ from typing import List
 
 import pymorphy2
 
-from skill.schemas import PlannedLesson
+from skill.schemas import PlannedLesson, Homework
 
 morph = pymorphy2.MorphAnalyzer()
 
@@ -93,16 +93,35 @@ def choose_scenario():
     return text, tts
 
 
-def get_schedule(lessons: List[PlannedLesson]):
-    if lessons:
-        text = "Список уроков:\n"
-        text += "\n".join(str(lesson) for lesson in lessons)
-    else:
-        text = "Извините, но в расписании ничего нет."
-    tts = text
+# region Расписание уроков
 
+def no_schedule():
+    text = "По расписанию ничего нет."
+    tts = "По расписанию ничего нет. " \
+          "Можете занять этот день чем-нибуль полезным." \
+          "Погулять, заняться спортом"
+
+    return text,tts
+
+
+def tell_about_schedule(list_of_lessons: List[PlannedLesson]):
+    text = "Уроков: " + len(list_of_lessons)
+    tts = "Всего " + __how_many_lessons(len(list_of_lessons))
+    for lesson in list_of_lessons:
+        tts += __tell_about_lesson(lesson.lesson, lesson.start)
+    tts += "sil<[200]> Скажите Повтори, если хотите послушать еще раз"
     return text, tts
 
+
+def __tell_about_lesson(lesson: str, time: str):
+    return f"sil<[200]> {lesson} начинается в sil<[300]> {task}"
+
+
+def __how_many_lessons(n: int) -> str:
+    tasks = morph.parse('урок')[0].make_agree_with_number(n).word
+    return str(n) + " " + tasks
+
+# endregion
 
 # region Настройки
 
@@ -250,7 +269,7 @@ def no_homework():
     return text, tts
 
 
-def tell_about_homework(list_of_homework: list, tasks: int):
+def tell_about_homework(list_of_homework: List[Homework], tasks: int):
 
     text = f"Заданий: {tasks}"
     tts = "Всего " + __how_many_tasks(tasks)
