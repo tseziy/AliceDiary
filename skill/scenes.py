@@ -456,7 +456,6 @@ class GetSchedule(GlobalScene):
 
         return self.make_response(request, text, tts)
 
-
     def handle_local_intents(self, request: Request):
         if intents.GET_SCHEDULE in request.intents:
             return GetSchedule()
@@ -481,6 +480,7 @@ def _list_scenes():
         if inspect.isclass(obj) and issubclass(obj, Scene):
             scenes.append(obj)
     return scenes
+
 
 SCENES = {scene.id(): scene for scene in _list_scenes()}
 
