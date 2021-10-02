@@ -21,5 +21,5 @@ class PlannedLesson:
 
 @dataclass
 class Homework:
-    lesson_name: str
-    assignment_text: str
+    lesson: str
+    homework: str
