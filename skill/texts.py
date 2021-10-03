@@ -95,11 +95,14 @@ def choose_scenario():
 
 # region Расписание уроков
 
+
 def no_schedule():
     text = "По расписанию ничего нет."
-    tts = "По расписанию ничего нет. " \
-          "Можете занять этот день чем-нибудь полезным." \
-          "Погулять, заняться спортом"
+    tts = (
+        "По расписанию ничего нет. "
+        "Можете занять этот день чем-нибудь полезным."
+        "Погулять, заняться спортом"
+    )
 
     return text, tts
 
@@ -118,8 +121,9 @@ def __tell_about_lesson(lesson: str, time: str):
 
 
 def __how_many_lessons(n: int) -> str:
-    tasks = morph.parse('урок')[0].make_agree_with_number(n).word
+    tasks = morph.parse("урок")[0].make_agree_with_number(n).word
     return str(n) + " " + tasks
+
 
 # endregion
 
@@ -307,7 +311,7 @@ def __tell_about_task(lesson: str, task: str):
 
 
 def __how_many_tasks(n: int) -> str:
-    tasks = morph.parse('задание')[0].make_agree_with_number(n).word
+    tasks = morph.parse("задание")[0].make_agree_with_number(n).word
     return str(n) + " " + tasks
 
 
