@@ -106,8 +106,8 @@ def schedule():
             "students": [
                 {
                     "name": "Кузьма",
-                    "school_id": "some-school-id",
-                    "class_id": "some-class-id",
+                    "school_id": "5",
+                    "class_id": "1А",
                 }
             ]
         },
@@ -173,7 +173,7 @@ def test_schedule(schedule):
     Check(ans).is_not_none().is_dict().has_keys("response")
     Check(ans.get("response", {})).is_not_none().is_dict().has_keys("text", "tts")
     Check(ans["response"]["text"]).is_not_none().is_string().matches(
-        "Извините, но в расписании ничего нет."
+        "По расписанию ничего нет."
     )
     Check(get_next_scene(ans)).is_not_none().is_string().matches("GetSchedule")
 

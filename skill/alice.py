@@ -139,9 +139,9 @@ def image_button(
     button_url="",
     button_payload="",
 ):
-    image = {
-        "image_id": image_id,
-    }
+    image = {}
+    if image_id:
+        image["image_id"] = image_id
     if title:
         image["title"] = title
     if description:

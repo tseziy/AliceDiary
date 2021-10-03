@@ -31,7 +31,7 @@ jobs:
         pip install -r requirements.txt
         pip install -r requirements-dev.txt
     - name: Python Code Quality and Lint
-      uses: ricardochaves/python-lint@v1.3.0
+      uses: ricardochaves/python-lint@v1.4.0
       with:
         use-pylint: false
         use-pycodestyle: true
@@ -40,7 +40,7 @@ jobs:
         use-mypy: false
         use-isort: false
         extra-pylint-options: ""
-        extra-pycodestyle-options: "--exclude=tests --max-line-length=120"
+        extra-pycodestyle-options: "--exclude=tests --max-line-length=120  --ignore E203,W503"
         extra-flake8-options: ""
         extra-black-options: ""
         extra-mypy-options: ""

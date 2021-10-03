@@ -1,10 +1,15 @@
+filler:
+    что|по|на|какая|какое|надо|и|пожалуйста
 root:
-    .* $schedule .* ($where)?
-$where:     
-    сегодня
-    завтра
-    вчера
-$schedule:
     %lemma
+    .* расписание $When?
+    $When? расписание .*
+    .* уроки $When?
+    $When? уроки .*
+    
+$When:     
+    $YANDEX.DATETIME
+$schedule:
+    
     расписание
     какие уроки

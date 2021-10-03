@@ -3,7 +3,7 @@ from typing import List
 
 import pymorphy2
 
-from skill.schemas import PlannedLesson
+from skill.schemas import Homework, PlannedLesson
 
 morph = pymorphy2.MorphAnalyzer()
 
@@ -93,16 +93,39 @@ def choose_scenario():
     return text, tts
 
 
-def get_schedule(lessons: List[PlannedLesson]):
-    if lessons:
-        text = "Список уроков:\n"
-        text += "\n".join(str(lesson) for lesson in lessons)
-    else:
-        text = "Извините, но в расписании ничего нет."
-    tts = text
+# region Расписание уроков
+
+
+def no_schedule():
+    text = "По расписанию ничего нет."
+    tts = (
+        "По расписанию ничего нет. "
+        "Можете занять этот день чем-нибудь полезным."
+        "Погулять, заняться спортом"
+    )
 
     return text, tts
 
+
+def tell_about_schedule(list_of_lessons: List[PlannedLesson]):
+    text = "Уроков: " + str(len(list_of_lessons))
+    tts = "Всего " + __how_many_lessons(len(list_of_lessons))
+    for lesson in list_of_lessons:
+        tts += __tell_about_lesson(lesson.name, lesson.end_time)
+    tts += "sil<[200]> Скажите Повтори, если хотите послушать еще раз"
+    return text, tts
+
+
+def __tell_about_lesson(lesson: str, time: str):
+    return f"sil<[200]> {lesson} начинается в sil<[300]> {time}"
+
+
+def __how_many_lessons(n: int) -> str:
+    tasks = morph.parse("урок")[0].make_agree_with_number(n).word
+    return str(n) + " " + tasks
+
+
+# endregion
 
 # region Настройки
 
@@ -235,6 +258,61 @@ def discard_settings():
 
     tts = text
     return text, tts
+
+
+def reset_settings():
+    text = """Очень жаль! Надеюсь вы еще вернетесь."""
+    tts = text
+
+    return text, tts
+
+
+def confirm_reset():
+    text = """Вы уверены, что хотите сбросить все настройки?"""
+    tts = text
+
+    return text, tts
+
+
+def reject_reset():
+    text = """Уф, а я уже думала что вы уходите.
+    Что будем искать, расписание или домашнее задание?"""
+    tts = text
+
+    return text, tts
+
+
+# endregion
+
+
+# region Домашняя работа
+
+
+def no_homework():
+    text = """Ничего не задали. Можно отдохнуть, почитать или поиграть.
+    Хочешь узнать что-нибудь еще? Задания на другой день или расписание?"""
+    tts = text
+    return text, tts
+
+
+def tell_about_homework(list_of_homework: List[Homework], tasks: int):
+
+    text = f"Заданий: {tasks}"
+    tts = "Всего " + __how_many_tasks(tasks)
+    for hw in list_of_homework:
+        tts += __tell_about_task(hw.lesson, hw.task)
+    tts += "sil<[200]> Скажите Повтори, если хотите послушать еще раз"
+
+    return text, tts
+
+
+def __tell_about_task(lesson: str, task: str):
+    return f"sil<[200]> {lesson} sil<[300]> {task}"
+
+
+def __how_many_tasks(n: int) -> str:
+    tasks = morph.parse("задание")[0].make_agree_with_number(n).word
+    return str(n) + " " + tasks
 
 
 # endregion
