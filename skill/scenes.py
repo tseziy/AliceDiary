@@ -601,11 +601,12 @@ class TellAboutHomework(GlobalScene):
 # endregion
 
 
-def global_fallback(self, request: Request, response):
+def global_fallback(self, request: Request, texts_response):
     if request.session.get(state.NEED_FALLBACK, False):
-        return SorryAndGoodbye()
+        text, tts = texts.sorry_and_goodbye()
+        return self.make_response(request, text, tts, end_session=True)
     else:
-        text, tts = response
+        text, tts = texts_response
         return self.make_response(
             request,
             text,
