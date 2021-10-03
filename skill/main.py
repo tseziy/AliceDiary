@@ -9,6 +9,7 @@ from sentry_sdk.integrations.logging import LoggingIntegration
 from skill.alice import Request
 from skill.scenes import DEFAULT_SCENE, SCENES
 from skill.state import PREVIOUS_MOVES, STATE_REQUEST_KEY
+from skill.intents import GET_SCHEDULE, GET_HOMEWORK
 
 root = logging.getLogger()
 root.setLevel(logging.DEBUG)
@@ -38,7 +39,7 @@ def handler(event, context):
 
     logging.debug(f"REQUEST: {json.dumps(event, ensure_ascii=False)}")
     logging.debug(f"COMMAND: {event['request']['command']}")
-    current_scene_id = event.get("state", {}).get(STATE_REQUEST_KEY, {}).get("scene")
+    current_scene_id = get_id_scene(event)
 
     logging.info(f"Current scene: {current_scene_id}")
     request = Request(event)
@@ -65,3 +66,12 @@ def handler(event, context):
         logging.exception(e, extra={"moves": moves})
         message = SCENES.get("HaveMistake")()
         return message.reply(request)
+
+
+def get_id_scene(event):
+    res = event.get("state", {}).get(STATE_REQUEST_KEY, {}).get("scene")
+    if res == None and event.get("request", {}).get("nlu", {}).get("intents", {}).get(GET_SCHEDULE) != None:
+        res = GET_SCHEDULE
+    elif res == None and event.get("request", {}).get("nlu", {}).get("intents", {}).get(GET_HOMEWORK) != None:
+        res = GET_HOMEWORK            
+    return res
