@@ -1,12 +1,6 @@
 root:
     $Reset $Settings
 
-slots:
-    Reset:
-        source: $Reset
-    Settings:
-        source: $Settings
-
 $Reset:
     %lemma
     сброс|сбросить|удалить|стереть

@@ -5,7 +5,9 @@ from typing import List
 
 from skill import diary_api, entities, intents, state, texts
 from skill.alice import Request, button, image_button, image_list
-from skill.dates_transformations import transform_yandex_datetime_value_to_datetime as ya_date_transform
+from skill.dates_transformations import (
+    transform_yandex_datetime_value_to_datetime as ya_date_transform,
+)
 from skill.scenes_util import Scene
 from skill.schemas import Homework, PlannedLesson, Student
 
@@ -424,8 +426,6 @@ class ChooseScenario(GlobalScene):
             return GetHomework()
         elif intents.REJECT in request.intents:
             return MaybeHelp()
-        elif intents.RESET in request.intents:
-            return Settings_Reset()
 
 
 class GetSchedule(GlobalScene):
@@ -462,8 +462,8 @@ class GetSchedule(GlobalScene):
             cards = _prepare_cards_lessons(lesson_list)
             text, tts = texts.tell_about_schedule(lesson_list)
             buttons = [
-                    button("Домашнее задание"),
-                    button("Расписание"),
+                button("Домашнее задание"),
+                button("Расписание"),
             ]
             return self.make_response(
                 request,
@@ -478,8 +478,6 @@ class GetSchedule(GlobalScene):
     def handle_local_intents(self, request: Request):
         if intents.REJECT in request.intents:
             return MaybeHelp()
-        elif intents.RESET in request.intents:
-            return Settings_Reset()
 
 
 class GetHomework(GlobalScene):
@@ -555,8 +553,6 @@ class GetHomework(GlobalScene):
             return TellAboutHomework(-1)
         if intents.REPEAT in request.intents:
             return TellAboutHomework(0)
-        elif intents.RESET in request.intents:
-            return Settings_Reset()
 
 
 class TellAboutHomework(GlobalScene):
@@ -599,8 +595,6 @@ class TellAboutHomework(GlobalScene):
             return TellAboutHomework(-1)
         if intents.REPEAT in request.intents:
             return TellAboutHomework(0)
-        elif intents.RESET in request.intents:
-            return Settings_Reset()
 
 
 # endregion

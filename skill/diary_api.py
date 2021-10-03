@@ -102,7 +102,7 @@ def __slice_schedule(schedule: pd.DataFrame, day: date, lessons: list):
         & (schedule["lesson"].isin(lessons_filter))
     ]
     homework_group = df_prev.groupby("lesson").agg({"date": "max"})
-    homework_merge = schedule.merge(homework_group, on=["date", "lesson"], how="inner")
-    homework = homework_merge.loc[(homework_merge["homework"] != "")]
+    homework_slice = schedule.merge(homework_group, on=["date", "lesson"], how="inner")
+    homework = homework_slice.loc[(homework_slice["homework"] != "")]
 
     return homework
