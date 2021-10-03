@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from fluentcheck import Check
 from datetime import datetime
 
