@@ -237,6 +237,28 @@ def discard_settings():
     return text, tts
 
 
+def reset_settings():
+    text = """Очень жаль! Надеюсь вы еще вернетесь."""
+    tts = text
+
+    return text, tts
+
+
+def confirm_reset():
+    text = """Вы уверены, что хотите сбросить все настройки?"""
+    tts = text
+
+    return text, tts
+
+
+def reject_reset():
+    text = """Уф, а я уже думала что вы уходите.
+    Что будем искать, расписание или домашнее задание?"""
+    tts = text
+
+    return text, tts
+
+
 # endregion
 
 

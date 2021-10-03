@@ -61,7 +61,7 @@ def get_homework(school_id: str, class_id: str, day=None, lessons=[]) -> List[Ho
     elif day is None and not lessons:
         hw = __homework_no_day_no_lessons(all_schedule)
     else:
-        raise Exception("Этого быть не может")
+        raise ValueError("Этого быть не может")
 
     homework = [
         Homework(row["lesson"], row["homework"]) for index, row in hw.iterrows()
@@ -99,8 +99,8 @@ def __slice_schedule(schedule: pd.DataFrame, day: date, lessons: list):
         (schedule["date"] <= pd.Timestamp(day))
         & (schedule["lesson"].isin(lessons_filter))
     ]
-    df_prev = df_prev.groupby("lesson").agg({"date": "max"})
-    slice = schedule.merge(df_prev, on=["date", "lesson"], how="inner")
-    homework = slice.loc[(slice["homework"] != "")]
+    homework_group = df_prev.groupby("lesson").agg({"date": "max"})
+    homework_merge = schedule.merge(homework_group, on=["date", "lesson"], how="inner")
+    homework = homework_merge.loc[(homework_merge["homework"] != "")]
 
     return homework
