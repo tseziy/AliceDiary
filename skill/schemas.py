@@ -12,11 +12,23 @@ class Student:
 @dataclass
 class PlannedLesson:
     name: str
-    time: time
+    start: time
+    end: time
 
-    def __str__(self):
-        # TODO операция со временем
-        return f"{self.name} в {self.time}"
+    @property
+    def start_time(self):
+        return time.strftime(self.start, "%H:%M")
+
+    @property
+    def end_time(self):
+        return time.strftime(self.end, "%H:%M")
+
+    @property
+    def duration(self):
+        result = ""
+        if self.start and self.end:
+            result = f"{self.start_time} - {self.end_time}"
+        return result
 
 
 @dataclass

@@ -14,6 +14,8 @@ df = pd.read_csv(
     dtype="str",
 )
 df["date"] = pd.to_datetime(df["date"], format="%d.%m.%Y")
+df["time_start"] = pd.to_datetime(df["time_start"], format="%H:%M")
+df["time_end"] = pd.to_datetime(df["time_end"], format="%H:%M")
 df["lesson"] = df["lesson"].str.lower()
 df.fillna("", inplace=True)
 
@@ -34,7 +36,7 @@ def get_schedule(
 
     schedule = __schedule(all_schedule, day, lessons)
     result = [
-        PlannedLesson(row["lesson"], row["time_start"])
+        PlannedLesson(row["lesson"], row["time_start"].time(), row["time_end"].time())
         for index, row in schedule.iterrows()
     ]
 
@@ -100,7 +102,7 @@ def __slice_schedule(schedule: pd.DataFrame, day: date, lessons: list):
         & (schedule["lesson"].isin(lessons_filter))
     ]
     homework_group = df_prev.groupby("lesson").agg({"date": "max"})
-    homework_merge = schedule.merge(homework_group, on=["date", "lesson"], how="inner")
-    homework = homework_merge.loc[(homework_merge["homework"] != "")]
+    homework_slice = schedule.merge(homework_group, on=["date", "lesson"], how="inner")
+    homework = homework_slice.loc[(homework_slice["homework"] != "")]
 
     return homework
