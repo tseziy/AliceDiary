@@ -98,10 +98,10 @@ def choose_scenario():
 def no_schedule():
     text = "По расписанию ничего нет."
     tts = "По расписанию ничего нет. " \
-          "Можете занять этот день чем-нибуль полезным." \
+          "Можете занять этот день чем-нибудь полезным." \
           "Погулять, заняться спортом"
 
-    return text,tts
+    return text, tts
 
 
 def tell_about_schedule(list_of_lessons: List[PlannedLesson]):
