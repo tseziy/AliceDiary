@@ -3,7 +3,7 @@ from typing import List
 
 import pymorphy2
 
-from skill.schemas import PlannedLesson, Homework
+from skill.schemas import Homework, PlannedLesson
 
 morph = pymorphy2.MorphAnalyzer()
 
