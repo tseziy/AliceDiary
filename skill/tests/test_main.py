@@ -99,23 +99,6 @@ def need_help_welcome():
 
 
 @pytest.fixture()
-def schedule():
-    return prepare_request(
-        intents=intent(intents.GET_SCHEDULE),
-        state_user={
-            "students": [
-                {
-                    "name": "Кузьма",
-                    "school_id": "5",
-                    "class_id": "1А",
-                }
-            ]
-        },
-        state_session={"scene": "ChooseScenario"},
-    )
-
-
-@pytest.fixture()
 def start_menu():
     return prepare_request(
         intents=intent(intents.CONFIRM), state_session={"scene": "Welcome"}
@@ -162,20 +145,5 @@ def test_help(help_session):
 
 
 # region Меню помощью
-
-# endregion
-
-# region schedule
-
-
-def test_schedule(schedule):
-    ans = main.handler(schedule, None)
-    Check(ans).is_not_none().is_dict().has_keys("response")
-    Check(ans.get("response", {})).is_not_none().is_dict().has_keys("text", "tts")
-    Check(ans["response"]["text"]).is_not_none().is_string().matches(
-        "По расписанию ничего нет."
-    )
-    Check(get_next_scene(ans)).is_not_none().is_string().matches("GetSchedule")
-
 
 # endregion

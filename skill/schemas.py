@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from datetime import time
+from datetime import date, time
 
 
 @dataclass
@@ -7,6 +7,18 @@ class Student:
     name: str
     school_id: str
     class_id: str
+
+    def __eq__(self, other):
+        if isinstance(other, str):
+            return self.name == other
+
+        return False
+
+    def __str__(self):
+        return self.name
+
+    def __repr__(self):
+        return str(self)
 
 
 @dataclass
