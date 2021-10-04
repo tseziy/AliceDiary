@@ -2,8 +2,7 @@ import random
 from typing import List
 
 import pymorphy2
-
-from skill.schemas import Homework, PlannedLesson
+from skill.schemas import Homework, PlannedLesson, Student
 
 morph = pymorphy2.MorphAnalyzer()
 
@@ -102,6 +101,7 @@ def no_schedule():
         "По расписанию ничего нет. "
         "Можете занять этот день чем-нибудь полезным."
         "Погулять, заняться спортом"
+        "Хотите узнать домашнее задание?"
     )
 
     return text, tts
@@ -112,7 +112,10 @@ def tell_about_schedule(list_of_lessons: List[PlannedLesson]):
     tts = "Всего " + __how_many_lessons(len(list_of_lessons))
     for lesson in list_of_lessons:
         tts += __tell_about_lesson(lesson.name, lesson.end_time)
-    tts += "sil<[200]> Скажите Повтори, если хотите послушать еще раз"
+    tts += (
+        "sil<[200]> Скажите Повтори, если хотите послушать еще раз."
+        "Хотите узнать домашнее задание?"
+    )
     return text, tts
 
 
@@ -253,7 +256,8 @@ def one_more_student():
 
 
 def discard_settings():
-    text = """Ох, ну надо же! Все мы допускаем ошибки. Давайте попробуем еще раз.
+    text = """Ох, ну надо же! Все мы допускаем ошибки.
+    Давайте попробуем еще раз.
     Как зовут ученика?"""
 
     tts = text
@@ -290,7 +294,7 @@ def reject_reset():
 
 def no_homework():
     text = """Ничего не задали. Можно отдохнуть, почитать или поиграть.
-    Хочешь узнать что-нибудь еще? Задания на другой день или расписание?"""
+    Хотите узнать расписание уроков?"""
     tts = text
     return text, tts
 
@@ -302,6 +306,8 @@ def tell_about_homework(list_of_homework: List[Homework], tasks: int):
     for hw in list_of_homework:
         tts += __tell_about_task(hw.lesson, hw.task)
     tts += "sil<[200]> Скажите Повтори, если хотите послушать еще раз"
+    if tasks > 3:
+        tts += "Скажите Вперед Назад для пролистывания списка"
 
     return text, tts
 
@@ -316,3 +322,76 @@ def __how_many_tasks(n: int) -> str:
 
 
 # endregion
+
+
+def not_found(students: list):
+    list_of_students = " ,".join(students)
+
+    text = f"""Не нашла настроек ученика с таким именем.
+    Сейчас вы можете проверить следующих:
+    {list_of_students}."""
+    tts = text + "Повторите еще раз, пожалуйста"
+
+    return text, tts
+
+
+def no_settings():
+    text = """Вы еще не ввели базовые настройки.
+    Хотите сейчас выполнить настройки?"""
+    tts = text
+
+    return text, tts
+
+
+def choose_homework(students: List[Student]):
+    text = """Чье домашнее задание хотите узнать?"""
+    last = students.pop()
+    tts = (
+        text
+        + " ,".join([__inflect(s.name, {"gent"}).capitalize() for s in students])
+        + " или "
+        + __inflect(last.name, {"gent"}).capitalize()
+    )
+
+    return text, tts
+
+
+def choose_schedule(students: List[Student]):
+    text = """Чье расписание хотите узнать?"""
+    last = students.pop()
+    tts = (
+        text
+        + " ,".join([__inflect(s.name, {"gent"}).capitalize() for s in students])
+        + " или "
+        + __inflect(last.name, {"gent"}).capitalize()
+    )
+
+    return text, tts
+
+
+def choose_student_fallback(students: List[Student]):
+    text = """Извините, я Вас не поняла.
+    Повторите, пожалуйста, имя ученика"""
+    last = students.pop()
+    tts = (
+        text
+        + " ,".join([__inflect(s.name, {"gent"}).capitalize() for s in students])
+        + " или "
+        + __inflect(last.name, {"gent"}).capitalize()
+    )
+
+    return text, tts
+
+
+def wrong_student_fallback(students: List[Student]):
+    text = """Не нашла настроек ученика с таким именем.
+    Выберите, пожалуйста, имя ученика"""
+    last = students.pop()
+    tts = (
+        text
+        + " ,".join([__inflect(s.name, {"gent"}).capitalize() for s in students])
+        + " или "
+        + __inflect(last.name, {"gent"}).capitalize()
+    )
+
+    return text, tts

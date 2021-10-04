@@ -52,7 +52,9 @@ def __schedule(schedule: pd.DataFrame, day: date, lessons: list) -> pd.DataFrame
 
 
 def get_homework(school_id: str, class_id: str, day=None, lessons=[]) -> List[Homework]:
-    all_schedule = df.loc[(df["school_id"] == school_id) & (df["class_id"] == class_id)]
+    all_schedule = df.loc[
+        (df["school_id"] == str(school_id)) & (df["class_id"] == class_id)
+    ]
 
     if day is not None and lessons:
         hw = __homework_day_lessons(all_schedule, day, lessons)

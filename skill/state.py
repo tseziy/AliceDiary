@@ -30,6 +30,9 @@ LIST_HW = "list_hw"
 SKIP_HW = "skip_hw"
 TASKS_HW = "tasks_hw"
 
+# Временный контекст для выбора ученика
+TEMP_CONTEXT = "context"
+
 # Эти состояния будут сохранены в fallback
 MUST_BE_SAVE = {PREVIOUS_STATE, NEXT_BUTTON}
 
