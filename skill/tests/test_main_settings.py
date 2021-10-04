@@ -59,7 +59,7 @@ def test_dont_say_name():
     assert answer.get_state_session(state.TEMP_NAME) is None
     assert answer.get_state_session(state.NEED_FALLBACK)
     assert answer.next_scene == "Settings_FirstScene"
-    assert "Простите, что-то я Вас не поняла" in answer.text
+    assert "Простите, я вас не поняла." in answer.text
 
 
 def test_say_num_school():
@@ -67,13 +67,13 @@ def test_say_num_school():
     req = (
         AliceRequest()
         .from_scene("Settings_GetSchool")
-        .add_entity(AliceEntity().number(666))
+        .add_entity(AliceEntity().number(777))
         .build()
     )
     ans = main.handler(req, None)
 
     answer = AliceAnswer(ans)
-    assert answer.get_state_session(state.TEMP_SCHOOL) == 666
+    assert answer.get_state_session(state.TEMP_SCHOOL) == 777
     assert answer.next_scene == "Settings_GetClassNumber"
 
 
@@ -92,7 +92,7 @@ def test_dont_say_num_school():
     assert answer.get_state_session(state.TEMP_SCHOOL) is None
     assert answer.get_state_session(state.NEED_FALLBACK)
     assert answer.next_scene == "Settings_GetSchool"
-    assert "Простите, что-то я Вас не поняла" in answer.text
+    assert "Простите, я вас не поняла." in answer.text
 
 
 def test_say_class_num_with_letter():
@@ -126,7 +126,7 @@ def test_dont_say_class_num():
     assert answer.get_state_session(state.TEMP_CLASS_ID) is None
     assert answer.get_state_session(state.NEED_FALLBACK)
     assert answer.next_scene == "Settings_GetClassNumber"
-    assert "Простите, что-то я Вас не поняла" in answer.text
+    assert "Простите, я вас не поняла." in answer.text
 
 
 def test_say_illegal_class_num():
@@ -143,7 +143,7 @@ def test_say_illegal_class_num():
 
     assert answer.get_state_session(state.TEMP_CLASS_ID) is None
     assert answer.next_scene == "Settings_IncorrectClassNumber"
-    assert "Извините. Похоже Вы назвали неправильный номер класса." in answer.text
+    assert "Извините, я не поняла номер класса." in answer.text
 
 
 def test_say_class_num_without_letter():
@@ -194,7 +194,7 @@ def test_dont_say_class_letter():
     assert answer.get_state_session(state.TEMP_CLASS_ID) == "11"
     assert answer.get_state_session(state.NEED_FALLBACK)
     assert answer.next_scene == "Settings_GetClassLetter"
-    assert "Простите, что-то я Вас не поняла" in answer.text
+    assert "Простите, я вас не поняла. Подскажите, какая буква у класса?" in answer.text
 
 
 def test_say_illegal_class_letter():
@@ -212,4 +212,4 @@ def test_say_illegal_class_letter():
 
     assert answer.get_state_session(state.TEMP_CLASS_ID) == "11"
     assert answer.next_scene == "Settings_IncorrectClassLetter"
-    assert "Извините. Похоже Вы назвали неправильную букву класса." in answer.text
+    assert "Извините, я не поняла букву класса." in answer.text

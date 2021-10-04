@@ -582,7 +582,6 @@ class NeedSettings(GlobalScene):
 
 
 class NotFoundStudent(GlobalScene):
-
     def reply(self, request: Request):
         saved_list = request.user.get(state.STUDENTS, [])
         students = [str(Student(**s)) for s in saved_list]

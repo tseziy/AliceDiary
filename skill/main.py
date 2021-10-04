@@ -70,8 +70,16 @@ def handler(event, context):
 
 def get_id_scene(event):
     res = event.get("state", {}).get(STATE_REQUEST_KEY, {}).get("scene")
-    if res is None and event.get("request", {}).get("nlu", {}).get("intents", {}).get(GET_SCHEDULE) is not None:
+    if (
+        res is None
+        and event.get("request", {}).get("nlu", {}).get("intents", {}).get(GET_SCHEDULE)
+        is not None
+    ):
         res = GET_SCHEDULE
-    elif res is None and event.get("request", {}).get("nlu", {}).get("intents", {}).get(GET_HOMEWORK) is not None:
-        res = GET_HOMEWORK            
+    elif (
+        res is None
+        and event.get("request", {}).get("nlu", {}).get("intents", {}).get(GET_HOMEWORK)
+        is not None
+    ):
+        res = GET_HOMEWORK
     return res
