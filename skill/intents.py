@@ -12,6 +12,7 @@ NEXT = "next"
 PREV = "prev"
 
 GET_SCHEDULE = "get_schedule"
-GET_HOMEWORK = "homework"
+GET_HOMEWORK = "get_homework"
 
 RESET = "reset_settings"
+MAIN_MENU = "main_menu"

@@ -7,9 +7,9 @@ import sentry_sdk
 from sentry_sdk.integrations.logging import LoggingIntegration
 
 from skill.alice import Request
+from skill.intents import GET_HOMEWORK, GET_SCHEDULE
 from skill.scenes import DEFAULT_SCENE, SCENES
-from skill.state import PREVIOUS_MOVES, STATE_REQUEST_KEY
-from skill.intents import GET_SCHEDULE, GET_HOMEWORK
+from skill.state import PREVIOUS_MOVES
 
 root = logging.getLogger()
 root.setLevel(logging.DEBUG)
@@ -39,10 +39,11 @@ def handler(event, context):
 
     logging.debug(f"REQUEST: {json.dumps(event, ensure_ascii=False)}")
     logging.debug(f"COMMAND: {event['request']['command']}")
-    current_scene_id = get_id_scene(event)
 
-    logging.info(f"Current scene: {current_scene_id}")
     request = Request(event)
+
+    current_scene_id = get_id_scene(request)
+    logging.info(f"Current scene: {current_scene_id}")
 
     try:
 
@@ -68,18 +69,10 @@ def handler(event, context):
         return message.reply(request)
 
 
-def get_id_scene(event):
-    res = event.get("state", {}).get(STATE_REQUEST_KEY, {}).get("scene")
-    if (
-        res is None
-        and event.get("request", {}).get("nlu", {}).get("intents", {}).get(GET_SCHEDULE)
-        is not None
-    ):
-        res = GET_SCHEDULE
-    elif (
-        res is None
-        and event.get("request", {}).get("nlu", {}).get("intents", {}).get(GET_HOMEWORK)
-        is not None
-    ):
-        res = GET_HOMEWORK
+def get_id_scene(request: Request):
+    res = request.session.get("scene")
+    if res is None and GET_SCHEDULE in request.intents:
+        res = "get_schedule"
+    elif res is None and GET_HOMEWORK in request.intents:
+        res = "get_homework"
     return res

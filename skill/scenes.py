@@ -1,8 +1,8 @@
 import inspect
 import sys
 from dataclasses import asdict
-from typing import List
 from datetime import datetime
+from typing import List
 
 from skill import diary_api, entities, intents, state, texts
 from skill.alice import Request, button, image_button, image_list
@@ -22,11 +22,10 @@ class GlobalScene(Scene):
         pass  # Здесь не нужно пока ничего делать
 
     def handle_global_intents(self, request):
-        if (
-            intents.HELP in request.intents
-            or intents.WHAT_CAN_YOU_DO in request.intents
-        ):
+        if intents.HELP in request.intents:
             return HelpMenu()
+        if intents.WHAT_CAN_YOU_DO in request.intents:
+            return WhatCanDo()
         if intents.GET_HOMEWORK in request.intents:
             return get_scene_for_homework(request)
         if intents.GET_SCHEDULE in request.intents:
@@ -68,7 +67,7 @@ class Welcome(GlobalScene):
             text, tts = texts.hello()
             buttons = [
                 button("Да"),
-                button("Помощь"),
+                button("Что умеешь?"),
             ]
 
         return self.make_response(
@@ -115,16 +114,105 @@ class MaybeHelp(GlobalScene):
             return Goodbye()
 
 
-class HelpMenu(GlobalScene):
+class WhatCanDo(GlobalScene):
     def reply(self, request: Request):
-        text, tts = texts.help_menu()
+        text, tts = texts.what_can_i_do()
         return self.make_response(
             request,
             text,
             tts,
-            buttons=[],
+            buttons=YES_NO,
             state={},
         )
+
+    def handle_local_intents(self, request: Request):
+        if intents.CONFIRM in request.intents:
+            return HelpMenu()
+        if intents.REJECT in request.intents:
+            return Welcome()
+
+
+class HelpMenu(GlobalScene):
+    def reply(self, request: Request):
+        saved_list = request.user.get(state.STUDENTS, [])
+        students = [Student(**s) for s in saved_list]
+
+        text, tts = texts.help_menu_start(students)
+        buttons = YES_NO
+        if saved_list:
+            buttons.append(button("Сбросить настройки"))
+        return self.make_response(
+            request,
+            text,
+            tts,
+            buttons=buttons,
+        )
+
+    def handle_local_intents(self, request: Request):
+        if intents.CONFIRM in request.intents:
+            return HelpMenu_Homework()
+        if intents.REJECT in request.intents:
+            return HelpMenu_SuggestSchedule()
+
+
+class HelpMenu_Homework(GlobalScene):
+    def reply(self, request: Request):
+        text, tts = texts.help_menu_homework()
+        return self.make_response(request, text, tts, buttons=YES_NO)
+
+    def handle_local_intents(self, request: Request):
+        if intents.CONFIRM in request.intents:
+            return HelpMenu_Schedule()
+        if intents.REJECT in request.intents:
+            return HelpMenu_SuggestSpec()
+
+
+class HelpMenu_SuggestSchedule(GlobalScene):
+    def reply(self, request: Request):
+        text, tts = texts.help_menu_suggest_schedule()
+        return self.make_response(request, text, tts, buttons=YES_NO)
+
+    def handle_local_intents(self, request: Request):
+        if intents.CONFIRM in request.intents:
+            return HelpMenu_Schedule()
+        if intents.REJECT in request.intents:
+            return HelpMenu_SuggestSpec()
+
+
+class HelpMenu_Schedule(GlobalScene):
+    def reply(self, request: Request):
+        text, tts = texts.help_menu_schedule()
+        return self.make_response(request, text, tts, buttons=YES_NO)
+
+    def handle_local_intents(self, request: Request):
+        if intents.CONFIRM in request.intents:
+            return HelpMenu_Spec()
+        if intents.REJECT in request.intents:
+            return Welcome()
+
+
+class HelpMenu_SuggestSpec(GlobalScene):
+    def reply(self, request: Request):
+        text, tts = texts.help_menu_suggest_spec()
+        return self.make_response(request, text, tts, buttons=YES_NO)
+
+    def handle_local_intents(self, request: Request):
+        if intents.CONFIRM in request.intents:
+            return HelpMenu_Schedule()
+        if intents.REJECT in request.intents:
+            return HelpMenu_SuggestSpec()
+
+
+class HelpMenu_Spec(GlobalScene):
+    def reply(self, request: Request):
+        text, tts = texts.help_menu_spec()
+        return self.make_response(
+            request, text, tts, buttons=[button("Главное меню"), button("Расписание")]
+        )
+
+    def handle_local_intents(self, request: Request):
+        if intents.MAIN_MENU in request.intents:
+            return Welcome()
 
 
 # endregion
@@ -444,7 +532,7 @@ class GetSchedule(GlobalScene):
                 request,
                 text,
                 tts,
-                buttons=[button("Домашнее задание")],
+                buttons=[button("Домашнее задание"), button("Главное меню")],
             )
         else:
             cards = _prepare_cards_lessons(lesson_list)
@@ -458,7 +546,10 @@ class GetSchedule(GlobalScene):
             )
 
     def handle_local_intents(self, request: Request):
-        pass
+        if intents.CONFIRM in request.intents:
+            return GetHomework()
+        if intents.REJECT in request.intents or request.command == "главное меню":
+            return Welcome()
 
 
 class GetHomework(GlobalScene):
@@ -483,7 +574,7 @@ class GetHomework(GlobalScene):
                 request,
                 text,
                 tts,
-                buttons=YES_NO,
+                buttons=[button("Расписание"), button("Главное меню")],
             )
         else:
             hw = _split_homework(homework)[0]
@@ -496,10 +587,7 @@ class GetHomework(GlobalScene):
                     button("Главное меню"),
                 ]
             else:
-                buttons = [
-                    button("Домашнее задание"),
-                    button("Расписание"),
-                ]
+                buttons = DEFAULT_BUTTONS
             return self.make_response(
                 request,
                 text,
@@ -520,6 +608,10 @@ class GetHomework(GlobalScene):
             return TellAboutHomework(-1)
         if intents.REPEAT in request.intents:
             return TellAboutHomework(0)
+        if intents.CONFIRM in request.intents:
+            return GetSchedule()
+        if intents.REJECT in request.intents or request.command == "главное меню":
+            return Welcome()
 
 
 class TellAboutHomework(GlobalScene):
@@ -542,10 +634,7 @@ class TellAboutHomework(GlobalScene):
                 button("Главное меню"),
             ]
         else:
-            buttons = [
-                button("Домашнее задание"),
-                button("Расписание"),
-            ]
+            buttons = DEFAULT_BUTTONS
         return self.make_response(
             request,
             text,
@@ -579,33 +668,6 @@ class NeedSettings(GlobalScene):
             return Settings_FirstScene()
         elif intents.REJECT in request.intents:
             return Welcome()
-
-
-class NotFoundStudent(GlobalScene):
-    def reply(self, request: Request):
-        saved_list = request.user.get(state.STUDENTS, [])
-        students = [str(Student(**s)) for s in saved_list]
-        text, tts = texts.not_found(students)
-
-        req_date = get_date_from_request(request)
-        lessons = get_lessons_from_request(request)
-
-        return self.make_response(
-            request,
-            text,
-            tts,
-            buttons=[button(name) for name in students],
-            state={
-                state.TEMP_CONTEXT: {
-                    "date": str(
-                        req_date
-                        if req_date is None
-                        else datetime.strftime(req_date, "%Y-%m-%d")
-                    ),
-                    "lessons": lessons,
-                }
-            },
-        )
 
 
 class ChooseStudentSchedule(GlobalScene):
@@ -859,3 +921,7 @@ SCENES = {scene.id(): scene for scene in _list_scenes()}
 DEFAULT_SCENE = Welcome
 YES_NO = [button("Да"), button("Нет")]
 HELP = [button("Помощь")]
+DEFAULT_BUTTONS = [
+    button("Домашнее задание"),
+    button("Расписание"),
+]
