@@ -31,6 +31,8 @@ class GlobalScene(Scene):
             return get_scene_for_homework(request)
         if intents.GET_SCHEDULE in request.intents:
             return get_scene_for_schedule(request)
+        if intents.WHEN_NEXT_LESSONS in request.intents:
+            return get_scene_when_next_lessons(request)
         if intents.RESET in request.intents:
             return Settings_Reset()
 
@@ -461,6 +463,22 @@ class GetSchedule(GlobalScene):
         pass
 
 
+class GetWhenNextLessons(GlobalScene):
+    def __init__(self, student = None):
+        self.student = student  
+
+    def reply(self, request: Request): 
+        lessons = get_lessons_from_request(request, intents.WHEN_NEXT_LESSONS)
+        next_lessons = diary_api.get_date_lessons(
+            self.student.school_id, self.student.class_id, lessons)
+        if not next_lessons:
+            text, tts = texts.no_next_lessons()
+        else:
+            text, tts = texts.tell_next_lessons(next_lessons)
+
+        return self.make_response(request, text, tts)
+
+
 class GetHomework(GlobalScene):
     def __init__(self, student=None):
         self.student = student
@@ -766,6 +784,27 @@ def get_scene_for_schedule(request: Request):
     return GetSchedule(student)
 
 
+def get_scene_when_next_lessons(request: Request):
+    saved_list = request.user.get(state.STUDENTS, [])
+    if not saved_list:  # еще не указаны ученики
+        return NeedSettings()
+
+    students = [Student(**s) for s in saved_list]
+    # TODO Сделать мультипользователя
+    if len(students) is 1:
+        student = students[0]
+        #if entities.FIO not in request.entities_list:
+        #    return ChooseStudentSchedule()
+        #else:
+        #    name = request.entity(entities.FIO)[0]["first_name"].capitalize()
+        #    search = [x for x in students if x == name]
+        #    if not search:
+        #        return ChooseStudentSchedule()
+        #    else:
+        #        student = search[0]
+    return GetWhenNextLessons(student)
+
+
 def get_student_from_request(request: Request):
     saved_list = request.user.get(state.STUDENTS, [])
     students = [Student(**s) for s in saved_list]
@@ -801,10 +840,10 @@ def get_scene_for_homework(request: Request):
     return GetHomework(student)
 
 
-def get_lessons_from_request(request: Request):
+def get_lessons_from_request(request: Request, type_intent = "homework"):
     # Выделим предметы. Их может не быть
     lessons = []
-    slots = request.intents.get("homework", {}).get("slots", {})
+    slots = request.intents.get(type_intent, {}).get("slots", {})
     for i in range(1, 10):
         subject = "subject" + str(i)
         if subject in slots:

@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from datetime import date, time
+import datetime
 
 
 @dataclass
@@ -47,3 +48,9 @@ class PlannedLesson:
 class Homework:
     lesson: str
     task: str
+
+@dataclass
+class NextLesson:
+    lesson: str
+    date: datetime
+    time_start: str

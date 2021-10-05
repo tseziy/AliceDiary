@@ -5,7 +5,7 @@ from typing import List
 
 import pandas as pd
 
-from skill.schemas import Homework, PlannedLesson
+from skill.schemas import Homework, PlannedLesson, NextLesson
 
 df = pd.read_csv(
     os.path.abspath("skill/database.csv"),
@@ -50,6 +50,16 @@ def __schedule(schedule: pd.DataFrame, day: date, lessons: list) -> pd.DataFrame
         & (not lessons or schedule["lesson"].isin(lessons_filter))
     ]
 
+def get_date_lessons(school_id: str, class_id: str, lessons=[])-> List[NextLesson]:
+    day = date.today()
+    all_schedule = df.loc[
+        (df["school_id"] == str(school_id)) & (df["class_id"] == class_id)
+    ]
+    next_lessons = __slice_schedule_next_lessons(all_schedule, day, lessons)
+    res = [
+        NextLesson(row["lesson"], row["date"], row["time_start"]) for index, row in next_lessons.iterrows()
+        ]
+    return res
 
 def get_homework(school_id: str, class_id: str, day=None, lessons=[]) -> List[Homework]:
     all_schedule = df.loc[
@@ -108,3 +118,12 @@ def __slice_schedule(schedule: pd.DataFrame, day: date, lessons: list):
     homework = homework_slice.loc[(homework_slice["homework"] != "")]
 
     return homework
+
+def __slice_schedule_next_lessons(schedule: pd.DataFrame, day: date, lessons: list):
+    lessons_filter = [x.lower() for x in lessons]
+    df_prev = schedule.loc[
+        (schedule["date"] > pd.Timestamp(day))
+        & (schedule["lesson"].isin(lessons_filter))
+    ]
+
+    return df_prev

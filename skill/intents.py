@@ -12,6 +12,7 @@ NEXT = "next"
 PREV = "prev"
 
 GET_SCHEDULE = "get_schedule"
+WHEN_NEXT_LESSONS = "when_next_lessons"
 GET_HOMEWORK = "homework"
 
 RESET = "reset_settings"

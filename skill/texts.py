@@ -114,6 +114,18 @@ def no_schedule():
     return text, tts
 
 
+def tell_next_lessons(list_of_lessons: List[PlannedLesson]):
+    text = "Следующий урок будет "
+    tts = text
+    lesson = list_of_lessons[0]
+    tts += __tell_about_next_lesson(lesson.date.date().strftime("%d.%m.%Y"), 
+        lesson.time_start.time().strftime("%H:%M"))
+    tts += (
+        "sil<[200]> Скажите Повтори, если хотите послушать еще раз."
+    )
+    return text, tts
+
+
 def tell_about_schedule(list_of_lessons: List[PlannedLesson]):
     text = "Уроков: " + str(len(list_of_lessons))
     tts = "Всего " + __how_many_lessons(len(list_of_lessons))
@@ -128,6 +140,10 @@ def tell_about_schedule(list_of_lessons: List[PlannedLesson]):
 
 def __tell_about_lesson(lesson: str, time: str):
     return f"sil<[200]> {lesson} начинается в sil<[300]> {time}"
+
+
+def __tell_about_next_lesson(date_lesson: str, time: str):
+    return f"sil<[200]> {date_lesson} начинается в sil<[300]> {time}"
 
 
 def __how_many_lessons(n: int) -> str:
@@ -298,6 +314,12 @@ def reject_reset():
 
 
 # region Домашняя работа
+
+
+def no_next_lessons():
+    text = ("В ближайщее время, этого урока не ожидается.")
+    tts = text
+    return text, tts
 
 
 def no_homework():
