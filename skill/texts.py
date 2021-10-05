@@ -12,37 +12,79 @@ def __inflect(word, case):
     return " ".join([morph.parse(x)[-1].inflect(case).word for x in word.split(" ")])
 
 
-def hello(start_text=None):
+def hello():
 
-    if start_text is None:
-        text = (
-            "Привет! Это цифровой дневник.\n"
-            "Я могу подсказать расписание уроков или напомнить, что задали домой.\n"
-            "Но для начала нужно выполнить простые настройки. Готовы продолжить?"
-        )
-
+    text = (
+        "Привет! Это цифровой дневник.\n"
+        "Я могу подсказать расписание уроков или напомнить, что задали домой.\n"
+        "Но для начала нужно выполнить простые настройки. Готовы продолжить?"
+    )
     tts = text
+
     return text, tts
 
 
-def hello_user_variable(start_text=None):
+def todo_list(todo):
+    result = ["Привет! Это Цифровой дневник.", "Вот список дел на сегодня"]
+    for name, task in todo.items():
+        if task[0] == 0 and task[1] == 0:
+            result.append(__all_empty(name))
+        if task[0] != 0 and task[1] == 0:
+            result.append(__only_homework(name, task[0]))
+        if task[0] == 0 and task[1] != 0:
+            result.append(__only_schedule(name, task[1]))
+        if task[0] != 0 and task[1] != 0:
+            result.append(__full_work(name, task[0], task[1]))
 
-    hello_mes = [
-        (
-            "Привет! Это цифровой дневник. Мы уже знакомы.\n"
-            "Какой вопрос сегодня? Расписание или домашнее задание?"
-        ),
-        (
-            "Привет! Это цифровой дневник.\n"
-            "Я могу подсказать расписание уроков или напомнить, что задали домой."
-        ),
+    result.append("Чтобы проверить домашнее задание, спросите меня. Что задали домой?")
+    text = "Список дел на сегодня"
+    tts = " ".join(result)
+
+    return text, tts
+
+
+def __all_empty(name):
+    options = [
+        f"У {__inflect(name, {'gent'})} нет домашнего задания и расписание пустое.",
+        f"{__inflect(name, {'datv'})} повезло: ни домашнего задания, ни уроков.",
     ]
 
-    if start_text is None:
-        text = random.choice(hello_mes)
+    return random.choice(options)
 
-    tts = text
-    return text, tts
+
+def __only_homework(name, homework):
+    options = [
+        f"У {__inflect(name, {'gent'})} только домашняя работа, "
+        f"{make_agree_with_number('задание', homework)}.",
+        f"{__inflect(name, {'datv'})} надо сделать домашнее задание. "
+        f"{make_agree_with_number('задача', homework)}.",
+    ]
+
+    return random.choice(options)
+
+
+def __only_schedule(name, lessons):
+    options = [
+        f"У {__inflect(name, {'gent'})} нет домашнего задания."
+        f"По расписанию {make_agree_with_number('урок', lessons)}",
+        f"{__inflect(name, {'datv'})} домой ничего не задали. "
+        f"Сегодня будет {make_agree_with_number('урок', lessons)}",
+    ]
+
+    return random.choice(options)
+
+
+def __full_work(name, homework, lessons):
+    options = [
+        f"У {__inflect(name, {'gent'})} домой задали "
+        f"{make_agree_with_number('задание', homework)} "
+        f"и по расписанию {make_agree_with_number('урок', lessons)}.",
+        f"{__inflect(name, {'datv'})}  надо сделать "
+        f"{make_agree_with_number('задача', homework)} "
+        f"и сегодня у него {make_agree_with_number('урок', lessons)}.",
+    ]
+
+    return random.choice(options)
 
 
 def mistake():
@@ -258,8 +300,11 @@ def __tell_about_lesson(lesson: str, time: str):
 
 
 def __how_many_lessons(n: int) -> str:
-    tasks = morph.parse("урок")[0].make_agree_with_number(n).word
-    return str(n) + " " + tasks
+    return make_agree_with_number("урок", n)
+
+
+def make_agree_with_number(word: str, num: int) -> str:
+    return str(num) + " " + morph.parse(word)[0].make_agree_with_number(num).word
 
 
 # endregion
