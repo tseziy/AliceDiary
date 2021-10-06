@@ -1,8 +1,8 @@
 import inspect
 import sys
 from dataclasses import asdict
-from typing import List
 from datetime import datetime
+from typing import List
 
 from skill import diary_api, entities, intents, state, texts
 from skill.alice import Request, button, image_button, image_list
@@ -22,11 +22,10 @@ class GlobalScene(Scene):
         pass  # Здесь не нужно пока ничего делать
 
     def handle_global_intents(self, request):
-        if (
-            intents.HELP in request.intents
-            or intents.WHAT_CAN_YOU_DO in request.intents
-        ):
+        if intents.HELP in request.intents:
             return HelpMenu()
+        if intents.WHAT_CAN_YOU_DO in request.intents:
+            return WhatCanDo()
         if intents.GET_HOMEWORK in request.intents:
             return get_scene_for_homework(request)
         if intents.GET_SCHEDULE in request.intents:
@@ -62,23 +61,31 @@ class GlobalScene(Scene):
 
 class Welcome(GlobalScene):
     def reply(self, request: Request):
-        saved_list = request.user.get(state.STUDENTS, [])
-        if saved_list:
-            text, tts = texts.hello_user_variable()
-            buttons = []
+        students = get_all_students_from_request(request)
+        if students:
+            todo_list = homework_and_schedule(students)
+            text, tts = texts.todo_list(todo_list)
+            cards = _prepare_cards_todo(todo_list)
+            return self.make_response(
+                request,
+                text,
+                tts,
+                card=image_list(cards, header=text),
+                buttons=DEFAULT_BUTTONS,
+            )
+
         else:
             text, tts = texts.hello()
             buttons = [
                 button("Да"),
-                button("Помощь"),
+                button("Что умеешь?"),
             ]
-
-        return self.make_response(
-            request,
-            text,
-            tts,
-            buttons=buttons,
-        )
+            return self.make_response(
+                request,
+                text,
+                tts,
+                buttons=buttons,
+            )
 
     def handle_local_intents(self, request: Request):
         if intents.CONFIRM in request.intents:
@@ -117,16 +124,104 @@ class MaybeHelp(GlobalScene):
             return Goodbye()
 
 
-class HelpMenu(GlobalScene):
+class WhatCanDo(GlobalScene):
     def reply(self, request: Request):
-        text, tts = texts.help_menu()
+        text, tts = texts.what_can_i_do()
         return self.make_response(
             request,
             text,
             tts,
-            buttons=[],
+            buttons=YES_NO,
             state={},
         )
+
+    def handle_local_intents(self, request: Request):
+        if intents.CONFIRM in request.intents:
+            return HelpMenu()
+        if intents.REJECT in request.intents:
+            return Welcome()
+
+
+class HelpMenu(GlobalScene):
+    def reply(self, request: Request):
+        students = get_all_students_from_request(request)
+
+        text, tts = texts.help_menu_start(students)
+        buttons = YES_NO
+        if students:
+            buttons.append(button("Сбросить настройки"))
+        return self.make_response(
+            request,
+            text,
+            tts,
+            buttons=buttons,
+        )
+
+    def handle_local_intents(self, request: Request):
+        if intents.CONFIRM in request.intents:
+            return HelpMenu_Homework()
+        if intents.REJECT in request.intents:
+            return HelpMenu_SuggestSchedule()
+
+
+class HelpMenu_Homework(GlobalScene):
+    def reply(self, request: Request):
+        text, tts = texts.help_menu_homework()
+        return self.make_response(request, text, tts, buttons=YES_NO)
+
+    def handle_local_intents(self, request: Request):
+        if intents.CONFIRM in request.intents:
+            return HelpMenu_Schedule()
+        if intents.REJECT in request.intents:
+            return HelpMenu_SuggestSpec()
+
+
+class HelpMenu_SuggestSchedule(GlobalScene):
+    def reply(self, request: Request):
+        text, tts = texts.help_menu_suggest_schedule()
+        return self.make_response(request, text, tts, buttons=YES_NO)
+
+    def handle_local_intents(self, request: Request):
+        if intents.CONFIRM in request.intents:
+            return HelpMenu_Schedule()
+        if intents.REJECT in request.intents:
+            return HelpMenu_SuggestSpec()
+
+
+class HelpMenu_Schedule(GlobalScene):
+    def reply(self, request: Request):
+        text, tts = texts.help_menu_schedule()
+        return self.make_response(request, text, tts, buttons=YES_NO)
+
+    def handle_local_intents(self, request: Request):
+        if intents.CONFIRM in request.intents:
+            return HelpMenu_Spec()
+        if intents.REJECT in request.intents:
+            return Welcome()
+
+
+class HelpMenu_SuggestSpec(GlobalScene):
+    def reply(self, request: Request):
+        text, tts = texts.help_menu_suggest_spec()
+        return self.make_response(request, text, tts, buttons=YES_NO)
+
+    def handle_local_intents(self, request: Request):
+        if intents.CONFIRM in request.intents:
+            return HelpMenu_Schedule()
+        if intents.REJECT in request.intents:
+            return HelpMenu_SuggestSpec()
+
+
+class HelpMenu_Spec(GlobalScene):
+    def reply(self, request: Request):
+        text, tts = texts.help_menu_spec()
+        return self.make_response(
+            request, text, tts, buttons=[button("Главное меню"), button("Расписание")]
+        )
+
+    def handle_local_intents(self, request: Request):
+        if intents.MAIN_MENU in request.intents:
+            return Welcome()
 
 
 # endregion
@@ -332,34 +427,26 @@ class Settings_Confirm(GlobalScene):
 
 class Settings_OneMore(GlobalScene):
     def reply(self, request: Request):
-        students = request.user.get(state.STUDENTS, [])
+        students = get_all_students_from_request(request)
         text, tts = texts.one_more_student()
 
         name = request.session.get(state.TEMP_NAME)
         school = request.session.get(state.TEMP_SCHOOL)
         class_id = request.session.get(state.TEMP_CLASS_ID)
-        students.append(
-            asdict(
-                Student(
-                    name,
-                    school,
-                    class_id,
-                )
-            )
-        )
+        students.append(Student(name, school, class_id))
         return self.make_response(
             request,
             text,
             tts,
             buttons=YES_NO,
-            user_state={state.STUDENTS: students},
+            user_state={state.STUDENTS: [asdict(student) for student in students]},
         )
 
     def handle_local_intents(self, request: Request):
         if intents.CONFIRM in request.intents:
             return Settings_FirstScene()
         else:
-            return ChooseScenario()
+            return Welcome()
 
 
 # endregion
@@ -412,16 +499,6 @@ class Settings_RejectReset(GlobalScene):
 
 # region base scenario
 
-#  TODO: Поменять сцену на Текущие дела
-class ChooseScenario(GlobalScene):
-    def reply(self, request: Request):
-        text, tts = texts.choose_scenario()
-        return self.make_response(request, text, tts)
-
-    def handle_local_intents(self, request: Request):
-        if intents.REJECT in request.intents:
-            return MaybeHelp()
-
 
 class GetSchedule(GlobalScene):
     def __init__(self, student=None):
@@ -430,37 +507,62 @@ class GetSchedule(GlobalScene):
     def reply(self, request: Request):
 
         context = request.session.get(state.TEMP_CONTEXT, {})
-        req_date = context.get("date")
-        if req_date is None:
-            req_date = get_date_from_request(request)
-        else:
-            req_date = datetime.strptime(req_date, "%Y-%m-%d")
+        req_date = get_date_from_request(request)
+        if (
+            req_date is None
+            and context is not None
+            and context.get("request_date") is not None
+        ):
+            req_date = datetime.strptime(context.get("request_date"), "%Y-%m-%d")
+
         lesson_list = diary_api.get_schedule(
             self.student.school_id,
             self.student.class_id,
             req_date,
         )
+        text_title, tts_title = texts.title(self.student, req_date)
         if not lesson_list:
             text, tts = texts.no_schedule()
             return self.make_response(
                 request,
-                text,
-                tts,
-                buttons=[button("Домашнее задание")],
+                text_title + ". " + text,
+                tts_title + " " + tts,
+                buttons=[button("Домашнее задание"), button("Главное меню")],
+                state={
+                    state.TEMP_CONTEXT: {
+                        "request_date": req_date
+                        if req_date is None
+                        else datetime.strftime(req_date, "%Y-%m-%d"),
+                        "student": asdict(self.student),
+                    }
+                },
             )
         else:
             cards = _prepare_cards_lessons(lesson_list)
             text, tts = texts.tell_about_schedule(lesson_list)
             return self.make_response(
                 request,
-                text,
-                tts,
-                card=image_list(cards, header=text),
-                buttons=YES_NO,
+                text_title + ". " + text,
+                tts_title + " " + tts,
+                card=image_list(cards, header=text_title + ". " + text),
+                buttons=[button("Домашнее задание"), button("Главное меню")],
+                state={
+                    state.TEMP_CONTEXT: {
+                        "request_date": req_date
+                        if req_date is None
+                        else datetime.strftime(req_date, "%Y-%m-%d"),
+                        "student": asdict(self.student),
+                    }
+                },
             )
 
     def handle_local_intents(self, request: Request):
-        pass
+        if intents.CONFIRM in request.intents:
+            context = request.session.get(state.TEMP_CONTEXT, {})
+            student = Student(**context.get("student"))
+            return GetHomework(student)
+        if intents.REJECT in request.intents or intents.MAIN_MENU in request.intents:
+            return Welcome()
 
 
 class GetWhenNextLessons(GlobalScene):
@@ -485,13 +587,22 @@ class GetHomework(GlobalScene):
 
     # Домашнее задание можно спросить указав предмет и дату на какую надо
     def reply(self, request: Request):
+
         context = request.session.get(state.TEMP_CONTEXT, {})
-        req_date = context.get("date")
-        if req_date is None:
-            req_date = get_date_from_request(request)
-        else:
-            req_date = datetime.strptime(req_date, "%Y-%m-%d")
-        lessons = context.get("lessons", get_lessons_from_request(request))
+        req_date = get_date_from_request(request)
+        if (
+            req_date is None
+            and context is not None
+            and context.get("request_date") is not None
+        ):
+            req_date = datetime.strptime(context.get("request_date"), "%Y-%m-%d")
+
+        lessons = get_lessons_from_request(request)
+        if not lessons and context is not None and context.get("lessons") is not None:
+            lessons = context.get("lessons")
+
+        text_title, tts_title = texts.title(self.student, req_date)
+
         homework = diary_api.get_homework(
             self.student.school_id, self.student.class_id, req_date, lessons
         )
@@ -499,9 +610,18 @@ class GetHomework(GlobalScene):
             text, tts = texts.no_homework()
             return self.make_response(
                 request,
-                text,
-                tts,
-                buttons=YES_NO,
+                text_title + ". " + text,
+                tts_title + " " + tts,
+                buttons=[button("Расписание"), button("Главное меню")],
+                state={
+                    state.TEMP_CONTEXT: {
+                        "request_date": req_date
+                        if req_date is None
+                        else datetime.strftime(req_date, "%Y-%m-%d"),
+                        "lessons": lessons,
+                        "student": asdict(self.student),
+                    }
+                },
             )
         else:
             hw = _split_homework(homework)[0]
@@ -514,20 +634,24 @@ class GetHomework(GlobalScene):
                     button("Главное меню"),
                 ]
             else:
-                buttons = [
-                    button("Домашнее задание"),
-                    button("Расписание"),
-                ]
+                buttons = DEFAULT_BUTTONS
             return self.make_response(
                 request,
-                text,
-                tts,
-                card=image_list(cards, header=text),
+                text_title + ". " + text,
+                tts_title + " " + tts,
+                card=image_list(cards, header=text_title + ". " + text),
                 buttons=buttons,
                 state={
                     state.LIST_HW: [asdict(x) for x in homework],
                     state.TASKS_HW: len(homework),
                     state.SKIP_HW: 0,
+                    state.TEMP_CONTEXT: {
+                        "request_date": req_date
+                        if req_date is None
+                        else datetime.strftime(req_date, "%Y-%m-%d"),
+                        "lessons": lessons,
+                        "student": asdict(self.student),
+                    },
                 },
             )
 
@@ -538,6 +662,12 @@ class GetHomework(GlobalScene):
             return TellAboutHomework(-1)
         if intents.REPEAT in request.intents:
             return TellAboutHomework(0)
+        if intents.CONFIRM in request.intents:
+            context = request.session.get(state.TEMP_CONTEXT, {})
+            student = Student(**context.get("student"))
+            return GetSchedule(student)
+        if intents.REJECT in request.intents or intents.MAIN_MENU in request.intents:
+            return Welcome()
 
 
 class TellAboutHomework(GlobalScene):
@@ -545,13 +675,19 @@ class TellAboutHomework(GlobalScene):
         self.__step = step
 
     def reply(self, request: Request):
+        context = request.session.get(state.TEMP_CONTEXT, {})
+        req_date = None
+        if context is not None and context.get("request_date") is not None:
+            req_date = datetime.strptime(context.get("request_date"), "%Y-%m-%d")
+        student = Student(**context.get("student"))
+        text_title, tts_title = texts.title(student, req_date)
+
         hw_dict = request.session.get(state.LIST_HW)
         hw = _split_homework([Homework(**x) for x in hw_dict])
         full = request.session.get(state.TASKS_HW)
         step = (request.session.get(state.SKIP_HW) + self.__step) % len(hw)
 
         cards = _prepare_cards_hw(hw[step])
-
         text, tts = texts.tell_about_homework(hw[step], full)
         if full > 3:
             buttons = [
@@ -560,17 +696,14 @@ class TellAboutHomework(GlobalScene):
                 button("Главное меню"),
             ]
         else:
-            buttons = [
-                button("Домашнее задание"),
-                button("Расписание"),
-            ]
+            buttons = DEFAULT_BUTTONS
         return self.make_response(
             request,
-            text,
-            tts,
-            card=image_list(cards, header=text),
+            text_title + ". " + text,
+            tts_title + " " + tts,
+            card=image_list(cards, header=text_title + ". " + text),
             buttons=buttons,
-            state={state.SKIP_HW: step},
+            state={state.SKIP_HW: step, state.TEMP_CONTEXT: context},
         )
 
     def handle_local_intents(self, request: Request):
@@ -599,33 +732,6 @@ class NeedSettings(GlobalScene):
             return Welcome()
 
 
-class NotFoundStudent(GlobalScene):
-    def reply(self, request: Request):
-        saved_list = request.user.get(state.STUDENTS, [])
-        students = [str(Student(**s)) for s in saved_list]
-        text, tts = texts.not_found(students)
-
-        req_date = get_date_from_request(request)
-        lessons = get_lessons_from_request(request)
-
-        return self.make_response(
-            request,
-            text,
-            tts,
-            buttons=[button(name) for name in students],
-            state={
-                state.TEMP_CONTEXT: {
-                    "date": str(
-                        req_date
-                        if req_date is None
-                        else datetime.strftime(req_date, "%Y-%m-%d")
-                    ),
-                    "lessons": lessons,
-                }
-            },
-        )
-
-
 class ChooseStudentSchedule(GlobalScene):
     def __init__(self):
         self.wrong_choice = False
@@ -634,9 +740,7 @@ class ChooseStudentSchedule(GlobalScene):
 
         req_date = get_date_from_request(request)
         lessons = get_lessons_from_request(request)
-
-        saved_list = request.user.get(state.STUDENTS, [])
-        students = [Student(**s) for s in saved_list]
+        students = get_all_students_from_request(request)
         cards = _prepare_cards_student(students)
         text, tts = texts.choose_schedule(students)
         return self.make_response(
@@ -646,11 +750,9 @@ class ChooseStudentSchedule(GlobalScene):
             card=image_list(cards, header=text),
             state={
                 state.TEMP_CONTEXT: {
-                    "date": str(
-                        req_date
-                        if req_date is None
-                        else datetime.strftime(req_date, "%Y-%m-%d")
-                    ),
+                    "request_date": req_date
+                    if req_date is None
+                    else datetime.strftime(req_date, "%Y-%m-%d"),
                     "lessons": lessons,
                 }
             },
@@ -676,9 +778,8 @@ class ChooseStudentHomework(GlobalScene):
 
         req_date = get_date_from_request(request)
         lessons = get_lessons_from_request(request)
+        students = get_all_students_from_request(request)
 
-        saved_list = request.user.get(state.STUDENTS, [])
-        students = [Student(**s) for s in saved_list]
         cards = _prepare_cards_student(students)
         text, tts = texts.choose_homework(students)
         return self.make_response(
@@ -688,11 +789,9 @@ class ChooseStudentHomework(GlobalScene):
             card=image_list(cards, header=text),
             state={
                 state.TEMP_CONTEXT: {
-                    "date": str(
-                        req_date
-                        if req_date is None
-                        else datetime.strftime(req_date, "%Y-%m-%d")
-                    ),
+                    "request_date": req_date
+                    if req_date is None
+                    else datetime.strftime(req_date, "%Y-%m-%d"),
                     "lessons": lessons,
                 }
             },
@@ -733,8 +832,7 @@ def choose_student_fallback(self, request: Request):
         text, tts = texts.sorry_and_goodbye()
         return self.make_response(request, text, tts, end_session=True)
     else:
-        saved_list = request.user.get(state.STUDENTS, [])
-        students = [Student(**s) for s in saved_list]
+        students = get_all_students_from_request(request)
         cards = _prepare_cards_student(students)
         if self.wrong_choice:
             text, tts = texts.wrong_student_fallback(students)
@@ -763,21 +861,23 @@ def get_date_from_request(request: Request):
 
 
 def get_scene_for_schedule(request: Request):
-    saved_list = request.user.get(state.STUDENTS, [])
-    if not saved_list:  # еще не указаны ученики
+    students = get_all_students_from_request(request)
+    if not students:  # еще не указаны ученики
         return NeedSettings()
 
-    students = [Student(**s) for s in saved_list]
     if len(students) > 1:
-        if entities.FIO not in request.entities_list:
-            return ChooseStudentSchedule()
-        else:
+        context = request.session.get(state.TEMP_CONTEXT)
+        if entities.FIO in request.entities_list:
             name = request.entity(entities.FIO)[0]["first_name"].capitalize()
             search = [x for x in students if x == name]
             if not search:
                 return ChooseStudentSchedule()
             else:
                 student = search[0]
+        elif context is not None and "student" in context:
+            student = Student(**context.get("student"))
+        else:
+            return ChooseStudentSchedule()
     else:
         student = students[0]
 
@@ -819,31 +919,54 @@ def get_student_from_request(request: Request):
 
 
 def get_scene_for_homework(request: Request):
-    saved_list = request.user.get(state.STUDENTS, [])
-    if not saved_list:  # еще не указаны ученики
+    students = get_all_students_from_request(request)
+    if not students:  # еще не указаны ученики
         return NeedSettings()
 
-    students = [Student(**s) for s in saved_list]
     if len(students) > 1:
-        if entities.FIO not in request.entities_list:
-            return ChooseStudentHomework()
-        else:
+        context = request.session.get(state.TEMP_CONTEXT, {})
+        if entities.FIO in request.entities_list:
             name = request.entity(entities.FIO)[0]["first_name"].capitalize()
             search = [x for x in students if x == name]
             if not search:
                 return ChooseStudentHomework()
             else:
                 student = search[0]
+        elif context is not None and "student" in context:
+            student = Student(**context.get("student"))
+        else:
+            return ChooseStudentHomework()
     else:
         student = students[0]
 
     return GetHomework(student)
 
 
-def get_lessons_from_request(request: Request, type_intent = "homework"):
+
+def get_all_students_from_request(request: Request) -> List[Student]:
+    saved_list = request.user.get(state.STUDENTS, [])
+    students = [Student(**s) for s in saved_list]
+
+    return students
+
+
+def get_student_from_request(request: Request):
+    students = get_all_students_from_request(request)
+    name = request.entity(entities.FIO)[0]["first_name"].capitalize()
+    search = [x for x in students if x == name]
+    if not search:
+        student = None
+    else:
+        student = search[0]
+
+    return student
+
+
+def get_lessons_from_request(request: Request, intent = "homework"):
+
     # Выделим предметы. Их может не быть
     lessons = []
-    slots = request.intents.get(type_intent, {}).get("slots", {})
+    slots = request.intents.get(intent, {}).get("slots", {})
     for i in range(1, 10):
         subject = "subject" + str(i)
         if subject in slots:
@@ -851,6 +974,16 @@ def get_lessons_from_request(request: Request, type_intent = "homework"):
             lessons = lessons + entities.subjects.get(lesson)
 
     return lessons
+
+
+def homework_and_schedule(students: List[Student]):
+    result = {}
+    for student in students:
+        homework = diary_api.get_homework(student.school_id, student.class_id)
+        schedule = diary_api.get_schedule(student.school_id, student.class_id)
+        result[student.name] = (len(schedule), len(homework))
+
+    return result
 
 
 def _split_homework(homework: list):
@@ -884,6 +1017,16 @@ def _prepare_cards_student(students: List[Student]):
     ]
 
 
+def _prepare_cards_todo(todo):
+    return [
+        image_button(
+            title=name.capitalize(),
+            description=f"Доманее задание: {task[0]}. Уроков: {task[1]}",
+        )
+        for name, task in todo.items()
+    ]
+
+
 def _list_scenes():
     current_module = sys.modules[__name__]
     scenes = []
@@ -898,3 +1041,7 @@ SCENES = {scene.id(): scene for scene in _list_scenes()}
 DEFAULT_SCENE = Welcome
 YES_NO = [button("Да"), button("Нет")]
 HELP = [button("Помощь")]
+DEFAULT_BUTTONS = [
+    button("Домашнее задание"),
+    button("Расписание"),
+]
