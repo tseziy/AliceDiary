@@ -1,7 +1,7 @@
+import datetime
 import inspect
 import sys
 from dataclasses import asdict
-from datetime import datetime
 from typing import List
 
 from skill import diary_api, entities, intents, state, texts
@@ -261,6 +261,7 @@ class Settings_Duplicate(GlobalScene):
 
     def fallback(self, request: Request):
         return global_fallback(self, request, texts.start_setting_fallback())
+
 
 # endregion
 
@@ -530,7 +531,9 @@ class GetSchedule(GlobalScene):
             and context is not None
             and context.get("request_date") is not None
         ):
-            req_date = datetime.strptime(context.get("request_date"), "%Y-%m-%d")
+            req_date = datetime.datetime.strptime(
+                context.get("request_date"), "%Y-%m-%d"
+            )
 
         lesson_list = diary_api.get_schedule(
             self.student.school_id,
@@ -549,7 +552,7 @@ class GetSchedule(GlobalScene):
                     state.TEMP_CONTEXT: {
                         "request_date": req_date
                         if req_date is None
-                        else datetime.strftime(req_date, "%Y-%m-%d"),
+                        else datetime.datetime.strftime(req_date, "%Y-%m-%d"),
                         "student": asdict(self.student),
                     }
                 },
@@ -567,7 +570,7 @@ class GetSchedule(GlobalScene):
                     state.TEMP_CONTEXT: {
                         "request_date": req_date
                         if req_date is None
-                        else datetime.strftime(req_date, "%Y-%m-%d"),
+                        else datetime.datetime.strftime(req_date, "%Y-%m-%d"),
                         "student": asdict(self.student),
                     }
                 },
@@ -596,7 +599,9 @@ class GetHomework(GlobalScene):
             and context is not None
             and context.get("request_date") is not None
         ):
-            req_date = datetime.strptime(context.get("request_date"), "%Y-%m-%d")
+            req_date = datetime.datetime.strptime(
+                context.get("request_date"), "%Y-%m-%d"
+            )
 
         lessons = get_lessons_from_request(request)
         if not lessons and context is not None and context.get("lessons") is not None:
@@ -618,7 +623,7 @@ class GetHomework(GlobalScene):
                     state.TEMP_CONTEXT: {
                         "request_date": req_date
                         if req_date is None
-                        else datetime.strftime(req_date, "%Y-%m-%d"),
+                        else datetime.datetime.strftime(req_date, "%Y-%m-%d"),
                         "lessons": lessons,
                         "student": asdict(self.student),
                     }
@@ -649,7 +654,7 @@ class GetHomework(GlobalScene):
                     state.TEMP_CONTEXT: {
                         "request_date": req_date
                         if req_date is None
-                        else datetime.strftime(req_date, "%Y-%m-%d"),
+                        else datetime.datetime.strftime(req_date, "%Y-%m-%d"),
                         "lessons": lessons,
                         "student": asdict(self.student),
                     },
@@ -679,7 +684,9 @@ class TellAboutHomework(GlobalScene):
         context = request.session.get(state.TEMP_CONTEXT, {})
         req_date = None
         if context is not None and context.get("request_date") is not None:
-            req_date = datetime.strptime(context.get("request_date"), "%Y-%m-%d")
+            req_date = datetime.datetime.strptime(
+                context.get("request_date"), "%Y-%m-%d"
+            )
         student = Student(**context.get("student"))
         text_title, tts_title = texts.title(student, req_date)
 
@@ -753,7 +760,7 @@ class ChooseStudentSchedule(GlobalScene):
                 state.TEMP_CONTEXT: {
                     "request_date": req_date
                     if req_date is None
-                    else datetime.strftime(req_date, "%Y-%m-%d"),
+                    else datetime.datetime.strftime(req_date, "%Y-%m-%d"),
                     "lessons": lessons,
                 }
             },
@@ -792,7 +799,7 @@ class ChooseStudentHomework(GlobalScene):
                 state.TEMP_CONTEXT: {
                     "request_date": req_date
                     if req_date is None
-                    else datetime.strftime(req_date, "%Y-%m-%d"),
+                    else datetime.datetime.strftime(req_date, "%Y-%m-%d"),
                     "lessons": lessons,
                 }
             },
@@ -855,6 +862,12 @@ def get_date_from_request(request: Request):
     if entities.DATETIME in request.entities_list:
         ya_date = request.entity(entities.DATETIME)[0]
         ya_date = ya_date_transform(ya_date)
+    elif intents.DAY in request.intents:
+        day = request.slot(intents.DAY, "Day")
+        delta = DAYS.index(day) - datetime.date.today().weekday()
+        if delta < 0:
+            delta += 7
+        ya_date = datetime.datetime.today() + datetime.timedelta(days=delta)
     else:
         ya_date = None
 
@@ -1010,3 +1023,4 @@ DEFAULT_BUTTONS = [
     button("Домашнее задание"),
     button("Расписание"),
 ]
+DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]

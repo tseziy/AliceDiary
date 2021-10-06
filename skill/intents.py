@@ -16,3 +16,5 @@ GET_HOMEWORK = "get_homework"
 
 RESET = "reset_settings"
 MAIN_MENU = "main_menu"
+
+DAY = "day_of_week"

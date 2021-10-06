@@ -98,3 +98,21 @@ entity SchoolSubject:
             мировая культура
         rhetoric:
             риторика
+
+entity DayOfWeek:
+    lemma: true
+    values:
+        Monday:
+            понедельник
+        Tuesday:
+            вторник
+        Wednesday:
+            среда
+        Thursday:
+            четверг
+        Friday:
+            пятница
+        Saturday:
+            суббота
+        Sunday:
+            воскресение
