@@ -360,6 +360,16 @@ def start_setting():
     return text, tts
 
 
+def duplicate_name():
+    text = (
+        "Уже добавили ученика с таким имененм.\n"
+        "Выберите, пожалуйста, другое имя."
+    )
+
+    tts = text
+    return text, tts
+
+
 def start_setting_fallback():
     text = "Простите, я вас не поняла. Скажите имя ученика, пожалуйста."
 

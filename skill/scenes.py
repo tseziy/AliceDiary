@@ -238,11 +238,29 @@ class Settings_FirstScene(GlobalScene):
 
     def handle_local_intents(self, request: Request):
         if entities.FIO in request.entities_list:
-            return Settings_GetSchool()
+            if get_student_from_request(request) is None:
+                return Settings_GetSchool()
+            else:
+                return Settings_Duplicate()
 
     def fallback(self, request: Request):
         return global_fallback(self, request, texts.start_setting_fallback())
 
+
+class Settings_Duplicate(GlobalScene):
+    def reply(self, request: Request):
+        text, tts = texts.duplicate_name()
+        return self.make_response(request, text, tts, buttons=HELP)
+
+    def handle_local_intents(self, request: Request):
+        if entities.FIO in request.entities_list:
+            if get_student_from_request(request) is None:
+                return Settings_GetSchool()
+            else:
+                return Settings_Duplicate()
+
+    def fallback(self, request: Request):
+        return global_fallback(self, request, texts.start_setting_fallback())
 
 # endregion
 
@@ -437,6 +455,7 @@ class Settings_OneMore(GlobalScene):
             text,
             tts,
             buttons=YES_NO,
+            state={state.TEMP_NAME: "", state.TEMP_SCHOOL: "", state.TEMP_CLASS_ID: ""},
             user_state={state.STUDENTS: [asdict(student) for student in students]},
         )
 
