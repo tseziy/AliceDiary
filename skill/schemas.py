@@ -29,20 +29,34 @@ class PlannedLesson:
     name: str
     start: time
     end: time
+    count: int
+
+    def __str__(self):
+        result = self.name.capitalize()
+        if self.count > 1:
+            result += f" ({self.count} урока)"
+
+        return result
 
     @property
     def start_time(self):
-        return time.strftime(self.start, "%H:%M")
+        if self.start is not None:
+            return time.strftime(self.start, "%H:%M")
+        else:
+            return ""
 
     @property
     def end_time(self):
-        return time.strftime(self.end, "%H:%M")
+        if self.end is not None:
+            return time.strftime(self.end, "%H:%M")
+        else:
+            return ""
 
     @property
     def duration(self):
         result = ""
         if self.start and self.end:
-            result = f"{self.start_time} - {self.end_time}"
+            result = f"{self.start} - {self.end}"
         return result
 
     @property
@@ -50,12 +64,15 @@ class PlannedLesson:
         result = ""
         for key, value in subjects.items():
             name_subject = ""
-            if self.name in value:
+            if self.name.lower() in value:
                 name_subject = key
             if not image_ids.get(name_subject) is None:
                 result = image_ids[name_subject]
 
         return result
+
+    def inc(self):
+        self.count += 1
 
 
 @dataclass

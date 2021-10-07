@@ -7,7 +7,7 @@ import sentry_sdk
 from sentry_sdk.integrations.logging import LoggingIntegration
 
 from skill.alice import Request
-from skill.intents import GET_HOMEWORK, GET_SCHEDULE
+from skill.intents import GET_HOMEWORK, GET_SCHEDULE, RESET
 from skill.scenes import DEFAULT_SCENE, SCENES
 from skill.state import PREVIOUS_MOVES
 
@@ -36,9 +36,6 @@ def handler(event, context):
             if os.environ["DEBUG"] == "True"
             else "production",
         )
-
-    logging.debug(f"REQUEST: {json.dumps(event, ensure_ascii=False)}")
-    logging.debug(f"COMMAND: {event['request']['command']}")
 
     request = Request(event)
 
@@ -75,4 +72,7 @@ def get_id_scene(request: Request):
         res = "get_schedule"
     elif res is None and GET_HOMEWORK in request.intents:
         res = "get_homework"
+    elif res is None and RESET in request.intents:
+        res = "Settings_Reset"
+
     return res

@@ -7,11 +7,12 @@ import pymorphy2
 
 from skill.schemas import Homework, PlannedLesson, Student
 
-morph = pymorphy2.MorphAnalyzer()
 locale.setlocale(locale.LC_TIME, ("RU", "UTF8"))  # the ru locale is installed
+morph = pymorphy2.MorphAnalyzer()
 
 
 def __inflect(word, case):
+
     return " ".join([morph.parse(x)[-1].inflect(case).word for x in word.split(" ")])
 
 
@@ -285,20 +286,25 @@ def no_schedule():
     return text, tts
 
 
-def tell_about_schedule(list_of_lessons: List[PlannedLesson]):
-    text = "Уроков: " + str(len(list_of_lessons))
-    tts = "Всего " + __how_many_lessons(len(list_of_lessons))
+def tell_about_schedule(list_of_lessons: List[PlannedLesson], lessons):
+
+    text = "Уроков: " + str(lessons)
+    tts = "Всего " + __how_many_lessons(lessons)
     for lesson in list_of_lessons:
-        tts += __tell_about_lesson(lesson.name, lesson.start_time)
-    tts += (
-        "sil<[200]> Скажите Повтори, если хотите послушать еще раз."
-        "Хотите узнать домашнее задание?"
-    )
+        tts += __tell_about_lesson(lesson)
+    tts += "sil<[200]> Скажите Повтори, если хотите послушать еще раз."
+    if lessons > 3:
+        tts += "Скажите Вперед Назад для пролистывания списка"
+    else:
+        tts += "Хотите узнать домашнее задание?"
     return text, tts
 
 
-def __tell_about_lesson(lesson: str, time: str):
-    return f"sil<[200]> {lesson} начинается в {time}"
+def __tell_about_lesson(lesson):
+    text = lesson.name
+    if lesson.count > 1:
+        text += " " + str(lesson.count) + " урока"
+    return f"sil<[200]> {text}"
 
 
 def __how_many_lessons(n: int) -> str:
@@ -332,12 +338,24 @@ def tell_about_homework(list_of_homework: List[Homework], tasks: int):
     tts += "sil<[200]> Скажите Повтори, если хотите послушать еще раз"
     if tasks > 3:
         tts += "Скажите Вперед Назад для пролистывания списка"
+    else:
+        tts += "Хотите узнать расписание уроков?"
 
     return text, tts
 
 
 def __tell_about_task(lesson: str, task: str):
-    return f"sil<[200]> {lesson} sil<[300]> {task}"
+    tell_task = (
+        task.replace("§", "параграф ")
+        .replace("№№", "номера ")
+        .replace("№", "номер ")
+        .replace("стр.", "страница ")
+        .replace("с.", "страница ")
+        .replace("упр.", "упражнение ")
+        .replace("у.", "упражнение ")
+        .replace("ур.", "урок ")
+    )
+    return f"sil<[200]> {lesson} sil<[300]> {tell_task}"
 
 
 def __how_many_tasks(n: int) -> str:
