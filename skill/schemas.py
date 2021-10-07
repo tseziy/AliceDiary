@@ -1,6 +1,8 @@
 from dataclasses import dataclass
 from datetime import time
 
+from skill.entities import image_ids, subjects
+
 
 @dataclass
 class Student:
@@ -40,6 +42,18 @@ class PlannedLesson:
         result = ""
         if self.start and self.end:
             result = f"{self.start_time} - {self.end_time}"
+        return result
+
+    @property
+    def link_url(self):
+        result = ""
+        for key, value in subjects.items():
+            name_subject = ""
+            if self.name in value:
+                name_subject = key
+            if not image_ids.get(name_subject) is None:
+                result = image_ids[name_subject]
+
         return result
 
 

@@ -984,7 +984,10 @@ def _prepare_cards_hw(homeworks: List[Homework]):
 
 def _prepare_cards_lessons(lessons: List[PlannedLesson]):
     return [
-        image_button(title=x.name.capitalize(), description=x.duration) for x in lessons
+        image_button(
+            title=x.name.capitalize(), description=x.duration, image_id=x.link_url
+        )
+        for x in lessons
     ]
 
 
