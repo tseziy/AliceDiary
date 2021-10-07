@@ -16,6 +16,7 @@ entity SchoolSubject:
         natural:
             природовение
             природа
+            окружающий мир
         music:
             музыка
             пение
@@ -53,6 +54,8 @@ entity SchoolSubject:
             краеведение
         history:
             история
+            история россии
+            всеобщая история
         literature:
             литература
             литра
