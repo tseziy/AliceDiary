@@ -558,7 +558,7 @@ class GetSchedule(GlobalScene):
                 context.get("request_date"), "%Y-%m-%d"
             )
 
-        lessons_list = diary_api.get_schedule(
+        lessons_list = diary_api.get_real_schedule(
             self.student.school_id,
             self.student.class_id,
             req_date,
@@ -700,7 +700,7 @@ class GetHomework(GlobalScene):
 
         text_title, tts_title = texts.title(self.student, req_date)
 
-        homework = diary_api.get_homework(
+        homework = diary_api.get_real_homework(
             self.student.school_id, self.student.class_id, req_date, lessons
         )
         if not homework:
@@ -1048,8 +1048,8 @@ def get_lessons_from_request(request: Request):
 def homework_and_schedule(students: List[Student]):
     result = {}
     for student in students:
-        homework = diary_api.get_homework(student.school_id, student.class_id)
-        schedule = diary_api.get_schedule(student.school_id, student.class_id)
+        homework = diary_api.get_real_homework(student.school_id, student.class_id)
+        schedule = diary_api.get_real_schedule(student.school_id, student.class_id)
         result[student.name] = (len(homework), sum(c.count for c in schedule))
 
     return result
