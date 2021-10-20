@@ -22,4 +22,4 @@ jobs:
       - name: Run yaspeller
         run: |
           sudo npm install yaspeller -g
-          yaspeller ./skill/texts.py --ignore-latin
+          yaspeller ./skill/texts.py --ignore-latin --ignore-digits
