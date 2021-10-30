@@ -582,17 +582,10 @@ class GetSchedule(GlobalScene):
             )
         else:
             count = sum(c.count for c in lessons_list)
-            lessons = _split_homework(lessons_list)[0]
+            lessons = lessons_list
             cards = _prepare_cards_lessons(lessons)
             text, tts = texts.tell_about_schedule(lessons, count)
-            if len(lessons_list) > 3:
-                buttons = [
-                    button("Назад"),
-                    button("Дальше"),
-                    button("Главное меню"),
-                ]
-            else:
-                buttons = [button("Домашнее задание"), button("Главное меню")]
+            buttons = [button("Домашнее задание"), button("Главное меню")]
             return self.make_response(
                 request,
                 text_title + ". " + text,
@@ -632,9 +625,6 @@ class GetSchedule(GlobalScene):
 
 
 class TellAboutSchedule(GlobalScene):
-    def __init__(self, step=0):
-        self.__step = step
-
     def reply(self, request: Request):
         context = request.session.get(state.TEMP_CONTEXT, {})
         req_date = None
@@ -645,16 +635,12 @@ class TellAboutSchedule(GlobalScene):
         student = Student(**context.get("student"))
         text_title, tts_title = texts.title(student, req_date)
 
-        lessons_list = request.session.get(state.LIST_HW)
-        lessons = _split_homework([PlannedLesson(**x) for x in lessons_list])
-        full = request.session.get(state.TASKS_HW)
-        step = (request.session.get(state.SKIP_HW) + self.__step) % len(lessons)
+        lessons_list = request.session.get(state.TASKS_HW)
 
-        cards = _prepare_cards_lessons(lessons[step])
-        text, tts = texts.tell_about_schedule(lessons[step], full)
+        cards = _prepare_cards_lessons(lessons_list)
+        text, tts = texts.tell_about_schedule(lessons_list, lessons_list)
         buttons = [
-            button("Назад"),
-            button("Дальше"),
+            button("Расписание"),
             button("Главное меню"),
         ]
 
@@ -664,7 +650,7 @@ class TellAboutSchedule(GlobalScene):
             tts_title + " " + tts,
             card=image_list(cards, header=text_title + ". " + text),
             buttons=buttons,
-            state={state.SKIP_HW: step, state.TEMP_CONTEXT: context},
+            state={state.SKIP_HW: 0, state.TEMP_CONTEXT: context},
         )
 
     def handle_local_intents(self, request: Request):
@@ -721,17 +707,9 @@ class GetHomework(GlobalScene):
                 },
             )
         else:
-            hw = _split_homework(homework)[0]
-            cards = _prepare_cards_hw(hw)
-            text, tts = texts.tell_about_homework(hw, len(homework))
-            if len(homework) > 3:
-                buttons = [
-                    button("Назад"),
-                    button("Дальше"),
-                    button("Главное меню"),
-                ]
-            else:
-                buttons = DEFAULT_BUTTONS
+            cards = _prepare_cards_hw(homework)
+            text, tts = texts.tell_about_homework(homework, len(homework))
+            buttons = DEFAULT_BUTTONS
             return self.make_response(
                 request,
                 text_title + ". " + text,
@@ -768,9 +746,6 @@ class GetHomework(GlobalScene):
 
 
 class TellAboutHomework(GlobalScene):
-    def __init__(self, step=0):
-        self.__step = step
-
     def reply(self, request: Request):
         context = request.session.get(state.TEMP_CONTEXT, {})
         req_date = None
@@ -782,27 +757,18 @@ class TellAboutHomework(GlobalScene):
         text_title, tts_title = texts.title(student, req_date)
 
         hw_dict = request.session.get(state.LIST_HW)
-        hw = _split_homework([Homework(**x) for x in hw_dict])
-        full = request.session.get(state.TASKS_HW)
-        step = (request.session.get(state.SKIP_HW) + self.__step) % len(hw)
+        hw = [Homework(**x) for x in hw_dict]
 
-        cards = _prepare_cards_hw(hw[step])
-        text, tts = texts.tell_about_homework(hw[step], full)
-        if full > 3:
-            buttons = [
-                button("Назад"),
-                button("Дальше"),
-                button("Главное меню"),
-            ]
-        else:
-            buttons = DEFAULT_BUTTONS
+        cards = _prepare_cards_hw(hw)
+        text, tts = texts.tell_about_homework(hw, len(hw))
+        buttons = DEFAULT_BUTTONS
         return self.make_response(
             request,
             text_title + ". " + text,
             tts_title + " " + tts,
             card=image_list(cards, header=text_title + ". " + text),
             buttons=buttons,
-            state={state.SKIP_HW: step, state.TEMP_CONTEXT: context},
+            state={state.SKIP_HW: 0, state.TEMP_CONTEXT: context},
         )
 
     def handle_local_intents(self, request: Request):
