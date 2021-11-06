@@ -1,7 +1,7 @@
 import datetime
 import inspect
 import sys
-from dataclasses import asdict
+
 from typing import List
 
 from skill import diary_api, entities, intents, state, texts
@@ -63,7 +63,7 @@ class Welcome(GlobalScene):
     def reply(self, request: Request):
         students = get_all_students_from_request(request)
         if students:
-            todo_list = homework_and_schedule(students)
+            todo_list = []
             text, tts = texts.todo_list(todo_list)
             cards = _prepare_cards_todo(todo_list)
             return self.make_response(
@@ -236,29 +236,8 @@ class Settings_FirstScene(GlobalScene):
 
     def handle_local_intents(self, request: Request):
         if entities.FIO in request.entities_list:
-            if not _is_correct_name(request):
-                return Settings_FirstScene_FIO()
-            if get_student_from_request(request) is None:
-                return Settings_GetSchool()
-            else:
-                return Settings_Duplicate()
-
-    def fallback(self, request: Request):
-        return global_fallback(self, request, texts.start_setting_fallback())
-
-
-class Settings_FirstScene_FIO(GlobalScene):
-    def reply(self, request: Request):
-        text, tts = texts.FIO_needs()
-
-        return self.make_response(request, text, tts, buttons=HELP)
-
-    def handle_local_intents(self, request: Request):
-        if entities.FIO in request.entities_list:
-            if not _is_correct_name(request):
-                return Settings_FirstScene_FIO()
-            if get_student_from_request(request) is None:
-                return Settings_GetSchool()
+            if exist_student_in_saved(request) is None:
+                return Settings_GetId()
             else:
                 return Settings_Duplicate()
 
@@ -273,8 +252,8 @@ class Settings_Duplicate(GlobalScene):
 
     def handle_local_intents(self, request: Request):
         if entities.FIO in request.entities_list:
-            if get_student_from_request(request) is None:
-                return Settings_GetSchool()
+            if exist_student_in_saved(request) is None:
+                return Settings_GetId()
             else:
                 return Settings_Duplicate()
 
@@ -284,177 +263,36 @@ class Settings_Duplicate(GlobalScene):
 
 # endregion
 
-# region school
 
-
-class Settings_GetSchool(GlobalScene):
+class Settings_GetId(GlobalScene):
     def reply(self, request: Request):
         name = request.entity(entities.FIO)[0]["first_name"].capitalize()
-        last_name = request.entity(entities.FIO)[0]["last_name"].capitalize()
-
-        text, tts = texts.what_school(name)
+        text, tts = texts.what_ID(name)
         return self.make_response(
-            request,
-            text,
-            tts,
-            buttons=HELP,
-            state={state.TEMP_NAME: name, state.TEMP_LAST_NAME: last_name},
+            request, text, tts, buttons=HELP, state={state.TEMP_NAME: name}
         )
 
     def handle_local_intents(self, request: Request):
         if entities.NUMBER in request.entities_list:
-            return Settings_GetClassNumber()
-
-    def fallback(self, request: Request):
-        return global_fallback(self, request, texts.what_school_fallback())
-
-
-# endregion
-
-# region class number
-
-
-class Settings_GetClassNumber(GlobalScene):
-    def reply(self, request: Request):
-        school_num = request.entity(entities.NUMBER)[0]
-        text, tts = texts.what_classnumber()
-        return self.make_response(
-            request,
-            text,
-            tts,
-            buttons=HELP,
-            state={state.TEMP_SCHOOL: school_num},
-        )
-
-    def handle_local_intents(self, request: Request):
-        if entities.NUMBER in request.entities_list:
-            class_num = request.entity(entities.NUMBER)[0]
-            if 1 <= class_num <= 11:
-                class_letter = request.tokens[-1]
-                if "А" <= class_letter.upper() <= "Я":
-                    return Settings_Confirm()
-                else:
-                    return Settings_GetClassLetter()
-            else:
-                return Settings_IncorrectClassNumber()
-
-    def fallback(self, request: Request):
-        return global_fallback(self, request, texts.what_classnumber_fallback())
-
-
-class Settings_IncorrectClassNumber(GlobalScene):
-    def reply(self, request: Request):
-        text, tts = texts.incorrect_classnumber()
-        return self.make_response(
-            request,
-            text,
-            tts,
-            buttons=HELP,
-        )
-
-    def handle_local_intents(self, request: Request):
-        if entities.NUMBER in request.entities_list:
-            class_num = request.entity(entities.NUMBER)[0]
-            if 1 <= class_num <= 11:
-                class_letter = request.tokens[-1].upper()
-                if len(class_letter) == 1 and "А" <= class_letter <= "Я":
-                    return Settings_Confirm()
-                else:
-                    return Settings_GetClassLetter()
-            else:
-                return Settings_IncorrectClassNumber()
-
-    def fallback(self, request):
-        text, tts = texts.sorry_and_goodbye()
-        return self.make_response(request, text, tts, end_session=True)
-
-
-# endregion
-
-# region class letter
-
-
-class Settings_GetClassLetter(GlobalScene):
-    def reply(self, request: Request):
-        class_num = request.entity(entities.NUMBER)[0]
-        text, tts = texts.what_classletter()
-        return self.make_response(
-            request,
-            text,
-            tts,
-            buttons=[
-                button("А"),
-                button("Б"),
-                button("В"),
-                button("Г"),
-                button("Д"),
-                button("Помощь"),
-            ],
-            state={state.TEMP_CLASS_ID: str(class_num)},
-        )
-
-    def handle_local_intents(self, request: Request):
-        class_letter = request.tokens[-1].upper()
-        if len(class_letter) == 1:
-            if "А" <= class_letter <= "Я":
-                return Settings_Confirm()
-            else:
-                return Settings_IncorrectClassLetter()
-
-    def fallback(self, request: Request):
-        return global_fallback(self, request, texts.what_classlatter_fallback())
-
-
-class Settings_IncorrectClassLetter(GlobalScene):
-    def reply(self, request: Request):
-        text, tts = texts.incorrect_classletter()
-        return self.make_response(
-            request,
-            text,
-            tts,
-            buttons=HELP,
-        )
-
-    def handle_local_intents(self, request: Request):
-        class_letter = request.tokens[-1]
-        if "А" <= class_letter.capitalize() <= "Я":
             return Settings_Confirm()
-        else:
-            return SorryAndGoodbye()
 
-    def fallback(self, request):
-        text, tts = texts.sorry_and_goodbye()
-        return self.make_response(request, text, tts, end_session=True)
-
-
-# endregion
+    def fallback(self, request: Request):
+        return global_fallback(self, request, texts.get_id_settings_fallback())
 
 
 class Settings_Confirm(GlobalScene):
     def reply(self, request: Request):
-        prev_session = request.session.get("scene")
-        if prev_session == "Settings_GetClassNumber":  # назвали класс полностью
-            class_num = request.entity(entities.NUMBER)[0]
-            class_letter = request.tokens[-1]
-        else:
-            class_num = request.session.get(state.TEMP_CLASS_ID)
-            class_letter = request.tokens[-1]
-        class_id = str(class_num) + " " + class_letter.upper()
+        name = request.session.get(state.TEMP_NAME)
+        id = request.entity(entities.NUMBER)[0]
 
-        text, tts = texts.confirm_settings(
-            request.session.get(state.TEMP_LAST_NAME)
-            + " "
-            + request.session.get(state.TEMP_NAME),
-            request.session.get(state.TEMP_SCHOOL),
-            class_id,
-        )
+        text, tts = texts.confirm_settings(name, id)
 
         return self.make_response(
             request,
             text,
             tts,
             buttons=YES_NO,
-            state={state.TEMP_CLASS_ID: class_id},
+            state={state.TEMP_ID: id},
         )
 
     def handle_local_intents(self, request: Request):
@@ -470,17 +308,15 @@ class Settings_OneMore(GlobalScene):
         text, tts = texts.one_more_student()
 
         name = request.session.get(state.TEMP_NAME)
-        last_name = request.session.get(state.TEMP_LAST_NAME)
-        school = request.session.get(state.TEMP_SCHOOL)
-        class_id = request.session.get(state.TEMP_CLASS_ID)
-        students.append(Student(name, last_name, school, class_id))
+        id = request.session.get(state.TEMP_ID)
+        students.append(Student(name, id))
         return self.make_response(
             request,
             text,
             tts,
             buttons=YES_NO,
-            state={state.TEMP_NAME: "", state.TEMP_SCHOOL: "", state.TEMP_CLASS_ID: ""},
-            user_state={state.STUDENTS: [asdict(student) for student in students]},
+            state={state.TEMP_NAME: "", state.TEMP_ID: ""},
+            user_state={state.STUDENTS: [student.dump() for student in students]},
         )
 
     def handle_local_intents(self, request: Request):
@@ -576,7 +412,7 @@ class GetSchedule(GlobalScene):
                         "request_date": req_date
                         if req_date is None
                         else datetime.datetime.strftime(req_date, "%Y-%m-%d"),
-                        "student": asdict(self.student),
+                        "student": self.student.dump(),
                     }
                 },
             )
@@ -593,14 +429,14 @@ class GetSchedule(GlobalScene):
                 card=image_list(cards, header=text_title + ". " + text),
                 buttons=buttons,
                 state={
-                    state.LIST_HW: [asdict(x) for x in lessons_list],
+                    state.LIST_HW: [x.dump() for x in lessons_list],
                     state.TASKS_HW: count,
                     state.SKIP_HW: 0,
                     state.TEMP_CONTEXT: {
                         "request_date": req_date
                         if req_date is None
                         else datetime.datetime.strftime(req_date, "%Y-%m-%d"),
-                        "student": asdict(self.student),
+                        "student": self.student.dump(),
                     },
                 },
             )
@@ -702,7 +538,7 @@ class GetHomework(GlobalScene):
                         if req_date is None
                         else datetime.datetime.strftime(req_date, "%Y-%m-%d"),
                         "lessons": lessons,
-                        "student": asdict(self.student),
+                        "student": self.student.dump(),
                     }
                 },
             )
@@ -717,7 +553,7 @@ class GetHomework(GlobalScene):
                 card=image_list(cards, header=text_title + ". " + text),
                 buttons=buttons,
                 state={
-                    state.LIST_HW: [asdict(x) for x in homework],
+                    state.LIST_HW: [x.dump() for x in homework],
                     state.TASKS_HW: len(homework),
                     state.SKIP_HW: 0,
                     state.TEMP_CONTEXT: {
@@ -725,7 +561,7 @@ class GetHomework(GlobalScene):
                         if req_date is None
                         else datetime.datetime.strftime(req_date, "%Y-%m-%d"),
                         "lessons": lessons,
-                        "student": asdict(self.student),
+                        "student": self.student.dump(),
                     },
                 },
             )
@@ -825,7 +661,7 @@ class ChooseStudentSchedule(GlobalScene):
 
     def handle_local_intents(self, request: Request):
         if entities.FIO in request.entities_list:
-            student = get_student_from_request(request)
+            student = exist_student_in_saved(request)
             if student is not None:
                 return GetSchedule(student)
             else:
@@ -864,7 +700,7 @@ class ChooseStudentHomework(GlobalScene):
 
     def handle_local_intents(self, request: Request):
         if entities.FIO in request.entities_list:
-            student = get_student_from_request(request)
+            student = exist_student_in_saved(request)
             if student is not None:
                 return GetHomework(student)
             else:
@@ -986,7 +822,7 @@ def get_all_students_from_request(request: Request) -> List[Student]:
     return students
 
 
-def get_student_from_request(request: Request):
+def exist_student_in_saved(request: Request):
     students = get_all_students_from_request(request)
     name = request.entity(entities.FIO)[0]["first_name"].capitalize()
     search = [x for x in students if x == name]
@@ -1064,13 +900,6 @@ def _prepare_cards_todo(todo):
         )
         for name, task in todo.items()
     ]
-
-
-def _is_correct_name(request: Request):
-    return (
-        request.entity(entities.FIO)[0].get("first_name") is not None
-        and request.entity(entities.FIO)[0].get("last_name") is not None
-    )
 
 
 def _list_scenes():

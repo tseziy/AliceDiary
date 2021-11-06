@@ -42,6 +42,7 @@ def test_say_name():
     answer = AliceAnswer(ans)
 
     assert answer.get_state_session(state.TEMP_NAME) == "Добрыня"
+    assert answer.next_scene == "Settings_GetId"
 
 
 def test_dont_say_name():
@@ -62,158 +63,35 @@ def test_dont_say_name():
     assert "Простите, я вас не поняла." in answer.text
 
 
-def test_say_num_school():
+def test_say_duplicate_name():
 
     req = (
         AliceRequest()
-        .from_scene("Settings_GetSchool")
-        .add_entity(AliceEntity().number(777))
-        .build()
-    )
-    ans = main.handler(req, None)
-
-    answer = AliceAnswer(ans)
-    assert answer.get_state_session(state.TEMP_SCHOOL) == 777
-    assert answer.next_scene == "Settings_GetClassNumber"
-
-
-def test_dont_say_num_school():
-
-    req = (
-        AliceRequest()
-        .from_scene("Settings_GetSchool")
-        .set_command("Слава Империи")
+        .from_scene("Settings_FirstScene")
+        .add_entity(AliceEntity().fio(first_name="Добрыня"))
+        .add_to_state_user(state.STUDENTS, [{"name": "Добрыня", "id": "111"}])
         .build()
     )
     ans = main.handler(req, None)
 
     answer = AliceAnswer(ans)
 
-    assert answer.get_state_session(state.TEMP_SCHOOL) is None
-    assert answer.get_state_session(state.NEED_FALLBACK)
-    assert answer.next_scene == "Settings_GetSchool"
-    assert "Простите, я вас не поняла." in answer.text
+    assert answer.next_scene == "Settings_Duplicate"
+    assert "Уже добавили ученика с таким именем" in answer.text
 
 
-def test_say_class_num_with_letter():
+def test_say_id():
 
     req = (
         AliceRequest()
-        .from_scene("Settings_GetClassNumber")
-        .set_command("11 Б")
-        .add_entity(AliceEntity().number(11))
-        .add_to_state_session("temp_name", "name")
-        .add_to_state_session("temp_last_name", "name")
+        .from_scene("Settings_GetId")
+        .add_entity(AliceEntity().number(111))
+        .add_to_state_session(state.TEMP_NAME, "Добрыня")
         .build()
     )
     ans = main.handler(req, None)
-
     answer = AliceAnswer(ans)
-    assert answer.get_state_session(state.TEMP_CLASS_ID) == "11Б"
+
+    assert answer.get_state_session(state.TEMP_NAME) == "Добрыня"
+    assert answer.get_state_session(state.TEMP_ID) == 111
     assert answer.next_scene == "Settings_Confirm"
-
-
-def test_dont_say_class_num():
-
-    req = (
-        AliceRequest()
-        .from_scene("Settings_GetClassNumber")
-        .set_command("Слава Империи")
-        .build()
-    )
-    ans = main.handler(req, None)
-
-    answer = AliceAnswer(ans)
-
-    assert answer.get_state_session(state.TEMP_CLASS_ID) is None
-    assert answer.get_state_session(state.NEED_FALLBACK)
-    assert answer.next_scene == "Settings_GetClassNumber"
-    assert "Простите, я вас не поняла." in answer.text
-
-
-def test_say_illegal_class_num():
-    req = (
-        AliceRequest()
-        .from_scene("Settings_GetClassNumber")
-        .set_command("100 Б")
-        .add_entity(AliceEntity().number(100))
-        .build()
-    )
-    ans = main.handler(req, None)
-
-    answer = AliceAnswer(ans)
-
-    assert answer.get_state_session(state.TEMP_CLASS_ID) is None
-    assert answer.next_scene == "Settings_IncorrectClassNumber"
-    assert "Извините, я не поняла номер класса." in answer.text
-
-
-def test_say_class_num_without_letter():
-
-    req = (
-        AliceRequest()
-        .from_scene("Settings_GetClassNumber")
-        .set_command("11")
-        .add_entity(AliceEntity().number(11))
-        .build()
-    )
-    ans = main.handler(req, None)
-
-    answer = AliceAnswer(ans)
-    assert answer.get_state_session(state.TEMP_CLASS_ID) == "11"
-    assert answer.next_scene == "Settings_GetClassLetter"
-
-
-def test_say_class_letter():
-
-    req = (
-        AliceRequest()
-        .from_scene("Settings_GetClassLetter")
-        .set_command("Б")
-        .add_to_state_session("temp_name", "name")
-        .add_to_state_session("temp_last_name", "name")
-        .add_to_state_session(state.TEMP_CLASS_ID, "11")
-        .build()
-    )
-    ans = main.handler(req, None)
-
-    answer = AliceAnswer(ans)
-    assert answer.get_state_session(state.TEMP_CLASS_ID) == "11Б"
-    assert answer.next_scene == "Settings_Confirm"
-
-
-def test_dont_say_class_letter():
-
-    req = (
-        AliceRequest()
-        .from_scene("Settings_GetClassLetter")
-        .set_command("Слава Империи")
-        .add_to_state_session(state.TEMP_CLASS_ID, "11")
-        .build()
-    )
-    ans = main.handler(req, None)
-
-    answer = AliceAnswer(ans)
-
-    assert answer.get_state_session(state.TEMP_CLASS_ID) == "11"
-    assert answer.get_state_session(state.NEED_FALLBACK)
-    assert answer.next_scene == "Settings_GetClassLetter"
-    assert "Простите, я вас не поняла. Подскажите, какая буква у класса?" in answer.text
-
-
-def test_say_illegal_class_letter():
-    req = (
-        AliceRequest()
-        .from_scene("Settings_GetClassLetter")
-        .set_command("Z")
-        .add_to_state_session(state.TEMP_CLASS_ID, "11")
-        .add_entity(AliceEntity().number(100))
-        .build()
-    )
-    ans = main.handler(req, None)
-
-    answer = AliceAnswer(ans)
-
-    assert answer.get_state_session(state.TEMP_CLASS_ID) == "11"
-    assert answer.next_scene == "Settings_IncorrectClassLetter"
-    assert "Извините, я не поняла букву класса." in answer.text

@@ -1,4 +1,5 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, asdict
+
 from datetime import time
 
 from skill.entities import image_ids, subjects
@@ -7,9 +8,7 @@ from skill.entities import image_ids, subjects
 @dataclass
 class Student:
     name: str
-    last_name: str
-    school_id: str
-    class_id: str
+    id: str
 
     def __eq__(self, other):
         if isinstance(other, str):
@@ -22,6 +21,9 @@ class Student:
 
     def __repr__(self):
         return str(self)
+
+    def dump(self):
+        return asdict(self)
 
 
 @dataclass
@@ -74,6 +76,9 @@ class PlannedLesson:
     def inc(self):
         self.count += 1
 
+    def dump(self):
+        return asdict(self)
+
 
 @dataclass
 class Homework:
@@ -91,3 +96,6 @@ class Homework:
                 result = image_ids[name_subject]
 
         return result
+
+    def dump(self):
+        return asdict(self)

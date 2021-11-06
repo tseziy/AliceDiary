@@ -165,7 +165,13 @@ class AliceEntity:
 
 
 class AliceRequest:
-    def __init__(self):
+    def __init__(
+        self,
+        has_screen=False,
+        has_payments=False,
+        has_account_linking=False,
+        has_audio_player=False,
+    ):
         self.new_session = False
         self.command = ""
         self.original_utterance = ""
@@ -175,6 +181,15 @@ class AliceRequest:
         self.state_sessions = {}
         self.state_user = {}
         self.state_application = {}
+        self.interfaces = {}
+        if has_screen:
+            self.interfaces["screen"] = {}
+        if has_payments:
+            self.interfaces["payments"] = {}
+        if has_account_linking:
+            self.interfaces["account_linking"] = {}
+        if has_audio_player:
+            self.interfaces["audio_player"] = {}
 
     @chained
     def new_session(self):
@@ -224,7 +239,7 @@ class AliceRequest:
                 "locale": "ru-RU",
                 "timezone": "UTC",
                 "client_id": "AliceMock",
-                "interfaces": {"screen": {}, "payments": {}, "account_linking": {}},
+                "interfaces": self.interfaces,
             }
 
         def session(new=False):
