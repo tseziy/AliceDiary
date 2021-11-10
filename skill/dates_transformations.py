@@ -1,6 +1,6 @@
 import datetime
 
-import dateutil
+from dateutil import relativedelta
 
 
 def adjust_relative_dates(
@@ -58,7 +58,7 @@ def adjust_relative_dates(
         )
         else 0
     )
-    return initial_date + dateutil.relativedelta.relativedelta(
+    return initial_date + relativedelta.relativedelta(
         years=relative_year,
         months=relative_month,
         days=relative_day,

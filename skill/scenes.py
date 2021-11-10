@@ -1,7 +1,6 @@
 import datetime
 import inspect
 import sys
-
 from typing import List
 
 from skill import diary_api, entities, intents, state, texts

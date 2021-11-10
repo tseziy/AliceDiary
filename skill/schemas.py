@@ -1,5 +1,4 @@
-from dataclasses import dataclass, asdict
-
+from dataclasses import asdict, dataclass
 from datetime import time
 
 from skill.entities import image_ids, subjects
@@ -31,12 +30,9 @@ class PlannedLesson:
     name: str
     start: time
     end: time
-    count: int
 
     def __str__(self):
         result = self.name.capitalize()
-        if self.count > 1:
-            result += f" ({self.count} урока)"
 
         return result
 
