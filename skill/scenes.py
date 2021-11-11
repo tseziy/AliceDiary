@@ -447,7 +447,6 @@ class ChooseStudentSchedule(GlobalScene):
     def reply(self, request: Request):
 
         req_date = get_date_from_request(request)
-        lessons = get_lessons_from_request(request)
         students = get_all_students_from_request(request)
         cards = _prepare_cards_student(students)
         text, tts = texts.choose_schedule(students)
@@ -460,8 +459,7 @@ class ChooseStudentSchedule(GlobalScene):
                 state.TEMP_CONTEXT: {
                     "request_date": req_date
                     if req_date is None
-                    else datetime.datetime.strftime(req_date, "%Y-%m-%d"),
-                    "lessons": lessons,
+                    else datetime.datetime.strftime(req_date, "%Y-%m-%d")
                 }
             },
         )
@@ -578,10 +576,10 @@ def exist_student_in_saved(request: Request):
     return student
 
 
-def get_lessons_from_request(request: Request):
+def get_lessons_from_request(request: Request, name_of_intent: str):
     # Выделим предметы. Их может не быть
     lessons = []
-    slots = request.intents.get("get_homework", {}).get("slots", {})
+    slots = request.intents.get(name_of_intent, {}).get("slots", {})
     for i in range(1, 10):
         subject = "subject" + str(i)
         if subject in slots:

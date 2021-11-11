@@ -71,19 +71,6 @@ def __only_schedule(name, lessons):
     return random.choice(options)
 
 
-def __full_work(name, homework, lessons):
-    options = [
-        f"{__inflect(name, {'datv'})} домой задали "
-        f"{make_agree_with_number('задание', homework)} "
-        f"и по расписанию {make_agree_with_number('урок', lessons)}.",
-        f"{__inflect(name, {'datv'})} нужно сделать "
-        f"{make_agree_with_number('задача', homework)} "
-        f"и сегодня у него {make_agree_with_number('урок', lessons)}.",
-    ]
-
-    return random.choice(options)
-
-
 def mistake():
     text = (
         "Прошу прощения, в навыке возникла непредвиденная ошибка.\n"
