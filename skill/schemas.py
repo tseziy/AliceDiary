@@ -36,6 +36,12 @@ class PlannedLesson:
 
         return result
 
+    def __lt__(self, other):
+        return self.start < other.start
+
+    def __gt__(self, other):
+        return self.start > other.start
+
     @property
     def start_time(self):
         if self.start is not None:

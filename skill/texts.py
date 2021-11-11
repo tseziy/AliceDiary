@@ -5,7 +5,7 @@ from typing import List
 
 import pymorphy2
 
-from skill.schemas import Homework, PlannedLesson, Student
+from skill.schemas import PlannedLesson, Student
 
 locale.setlocale(locale.LC_TIME, ("RU", "UTF8"))  # the ru locale is installed
 morph = pymorphy2.MorphAnalyzer()
@@ -36,17 +36,15 @@ def hello():
 
 def todo_list(todo):
     result = ["Привет! Это Цифровой дневник.", "Вот список дел на сегодня."]
-    for name, task in todo.items():
-        if task[0] == 0 and task[1] == 0:
+    for name, tasks in todo.items():
+        if not tasks:
             result.append(__all_empty(name))
-        if task[0] != 0 and task[1] == 0:
-            result.append(__only_homework(name, task[0]))
-        if task[0] == 0 and task[1] != 0:
-            result.append(__only_schedule(name, task[1]))
-        if task[0] != 0 and task[1] != 0:
-            result.append(__full_work(name, task[0], task[1]))
+        else:
+            result.append(__only_schedule(name, tasks))
 
-    result.append("Чтобы проверить домашнее задание, спросите меня. Что задали домой?")
+    result.append(
+        "Чтобы узнать расписание спросите меня, например. Какие уроки завтра?"
+    )
     text = "Список дел на сегодня"
     tts = " ".join(result)
 
@@ -55,19 +53,8 @@ def todo_list(todo):
 
 def __all_empty(name):
     options = [
-        f"У {__inflect(name, {'gent'})} нет домашнего задания и расписание пустое.",
-        f"{__inflect(name, {'datv'})} повезло: ни домашнего задания, ни уроков.",
-    ]
-
-    return random.choice(options)
-
-
-def __only_homework(name, homework):
-    options = [
-        f"У {__inflect(name, {'gent'})} только домашняя работа, "
-        f"{make_agree_with_number('задание', homework)}.",
-        f"{__inflect(name, {'datv'})} нужно сделать домашнее задание. "
-        f"{make_agree_with_number('задача', homework)}.",
+        f"У {__inflect(name, {'gent'})} расписание пустое.",
+        f"{__inflect(name, {'datv'})} повезло - уроков нет",
     ]
 
     return random.choice(options)
@@ -75,10 +62,10 @@ def __only_homework(name, homework):
 
 def __only_schedule(name, lessons):
     options = [
-        f"У {__inflect(name, {'gent'})} нет домашнего задания."
-        f"По расписанию {make_agree_with_number('урок', lessons)}",
-        f"{__inflect(name, {'datv'})} домой ничего не задали. "
-        f"Сегодня будет {make_agree_with_number('урок', lessons)}",
+        f"У {__inflect(name, {'gent'})} по расписанию "
+        f"{make_agree_with_number('урок', lessons)}",
+        f"У {__inflect(name, {'datv'})} сегодня будет "
+        f"{make_agree_with_number('урок', lessons)}",
     ]
 
     return random.choice(options)
@@ -195,22 +182,6 @@ def help_menu_start(students):
     return text, tts
 
 
-def help_menu_homework():
-    text = (
-        "Чтобы узнать, что задали, скажите:\n"
-        '"Какое домашнее задание?"\n'
-        "Или, если хотите уточнить предмет:\n"
-        '"Что задали на завтра по математике?\n'
-        "Если есть несколько учеников, добавьте имя:\n"
-        '"Что Алисе задали по риторике на послезавтра"\n'
-        "Теперь вы знаете как получить домашнюю работу."
-        "А еще я могу подсказать расписание. Рассказать, как?"
-    )
-    tts = text
-
-    return text, tts
-
-
 def help_menu_suggest_schedule():
     text = "Ладно. А еще я могу подсказать расписание. Рассказать, как?"
     tts = text
@@ -278,27 +249,38 @@ def no_schedule():
     tts = (
         "По расписанию ничего нет."
         "Можно провести этот день с пользой. Погулять или заняться физкультурой."
-        "Хотите узнать домашнее задание?"
     )
 
     return text, tts
 
 
-def tell_about_schedule(list_of_lessons: List[PlannedLesson], lessons):
+def tell_about_schedule(list_of_lessons: List[PlannedLesson]):
 
-    text = "Уроков: " + str(lessons)
-    tts = "Всего " + __how_many_lessons(lessons)
+    count = len(list_of_lessons)
+    text = "\nУроков: " + str(count) + "\n\n"
+    tts = "Всего " + __how_many_lessons(count)
     for lesson in list_of_lessons:
+        text += "\n" + __print_lesson(lesson)
         tts += __tell_about_lesson(lesson)
     tts += "sil<[200]> Скажите Повтори, если хотите послушать еще раз."
     return text, tts
 
 
 def __tell_about_lesson(lesson):
-    text = lesson.name
-    if lesson.count > 1:
-        text += " " + str(lesson.count) + " урока"
-    return f"sil<[200]> {text}"
+    tts = lesson.name
+    if lesson.start_time:
+        tts += " в " + lesson.start_time
+    return f"sil<[200]> {tts}"
+
+
+def __print_lesson(lesson):
+    if lesson.start_time and lesson.end_time:
+        text = f"{lesson.start_time}-{lesson.end_time}. "
+    else:
+        text = ""
+
+    text += lesson.name
+    return text
 
 
 def __how_many_lessons(n: int) -> str:
@@ -311,53 +293,6 @@ def make_agree_with_number(word: str, num: int) -> str:
 
 # endregion
 
-# region Домашняя работа
-
-
-def no_homework():
-    text = (
-        "Ничего не задали. Можно отдохнуть или заняться любимым делом.\n"
-        "Хотите узнать расписание уроков?"
-    )
-    tts = text
-    return text, tts
-
-
-def tell_about_homework(list_of_homework: List[Homework], tasks: int):
-
-    text = f"Заданий: {tasks}"
-    tts = "Всего " + __how_many_tasks(tasks)
-    for hw in list_of_homework:
-        tts += __tell_about_task(hw.lesson, hw.task)
-    tts += "sil<[200]> Скажите Повтори, если хотите послушать еще раз"
-    if tasks > 3:
-        tts += "Скажите Вперед Назад для пролистывания списка"
-    else:
-        tts += "Хотите узнать расписание уроков?"
-
-    return text, tts
-
-
-def __tell_about_task(lesson: str, task: str):
-    tell_task = (
-        task.replace("§", "параграф ")
-        .replace("№№", "номера ")
-        .replace("№", "номер ")
-        .replace("стр.", "страница ")
-        .replace("с.", "страница ")
-        .replace("упр.", "упражнение ")
-        .replace("у.", "упражнение ")
-        .replace("ур.", "урок ")
-    )
-    return f"sil<[200]> {lesson} sil<[300]> {tell_task}"
-
-
-def __how_many_tasks(n: int) -> str:
-    tasks = morph.parse("задание")[0].make_agree_with_number(n).word
-    return str(n) + " " + tasks
-
-
-# endregion
 
 # region Настройки
 
@@ -496,19 +431,6 @@ def no_settings():
 
 
 # region Выбор ученика
-
-
-def choose_homework(students: List[Student]):
-    text = """Чье домашнее задание хотите узнать?"""
-    last = students.pop()
-    tts = (
-        text
-        + " ,".join([__inflect(s.name, {"gent"}).capitalize() for s in students])
-        + " или "
-        + __inflect(last.name, {"gent"}).capitalize()
-    )
-
-    return text, tts
 
 
 def choose_schedule(students: List[Student]):

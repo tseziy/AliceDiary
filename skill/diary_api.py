@@ -38,8 +38,7 @@ def get_schedule_on_date(id: str, day=None) -> List[PlannedLesson]:
             lesson["datetime_from"], "%d.%m.%Y %H:%M:%S"
         ).time()
         lesson_to = datetime.strptime(lesson["datetime_to"], "%d.%m.%Y %H:%M:%S").time()
-        result.insert(
-            lesson["number"] - 1,
+        result.append(
             PlannedLesson(lesson["subject_name"], lesson_from, lesson_to),
         )
-    return result
+    return sorted(result)
