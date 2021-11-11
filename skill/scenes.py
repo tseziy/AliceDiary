@@ -155,19 +155,13 @@ class HelpMenu(GlobalScene):
         )
 
     def handle_local_intents(self, request: Request):
-        if intents.REJECT in request.intents:
-            return HelpMenu_SuggestSchedule()
-
-
-class HelpMenu_SuggestSchedule(GlobalScene):
-    def reply(self, request: Request):
-        text, tts = texts.help_menu_suggest_schedule()
-        return self.make_response(request, text, tts, buttons=YES_NO)
-
-    def handle_local_intents(self, request: Request):
         if intents.CONFIRM in request.intents:
-            return HelpMenu_Schedule()
-        if intents.REJECT in request.intents:
+            students = get_all_students_from_request(request)
+            if not students:
+                return Settings_FirstScene()
+            else:
+                return HelpMenu_Schedule()
+        elif intents.REJECT in request.intents:
             return HelpMenu_SuggestSpec()
 
 
@@ -190,9 +184,9 @@ class HelpMenu_SuggestSpec(GlobalScene):
 
     def handle_local_intents(self, request: Request):
         if intents.CONFIRM in request.intents:
-            return HelpMenu_Schedule()
+            return HelpMenu_Spec()
         if intents.REJECT in request.intents:
-            return HelpMenu_SuggestSpec()
+            return Welcome()
 
 
 class HelpMenu_Spec(GlobalScene):
