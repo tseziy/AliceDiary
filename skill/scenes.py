@@ -68,7 +68,7 @@ class Welcome(GlobalScene):
                 text,
                 tts,
                 card=image_list(cards, header=text),
-                buttons=DEFAULT_BUTTONS,
+                buttons=[button("Расписание уроков"), button("Расписание на завтра")],
             )
 
         else:
