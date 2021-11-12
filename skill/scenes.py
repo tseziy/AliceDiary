@@ -86,7 +86,11 @@ class Welcome(GlobalScene):
 
     def handle_local_intents(self, request: Request):
         if intents.CONFIRM in request.intents:
-            return Settings_FirstScene()
+            students = get_all_students_from_request(request)
+            if students:
+                return GetSchedule()
+            else:
+                return Settings_FirstScene()
         elif intents.REJECT in request.intents:
             return MaybeHelp()
 

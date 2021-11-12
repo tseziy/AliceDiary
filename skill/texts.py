@@ -42,9 +42,7 @@ def todo_list(todo):
         else:
             result.append(__only_schedule(name, tasks))
 
-    result.append(
-        "Чтобы узнать расписание спросите меня, например. Какие уроки завтра?"
-    )
+    result.append("Хотите узнать подробное расписание на сегодня?")
     text = "Список дел на сегодня"
     tts = " ".join(result)
 
